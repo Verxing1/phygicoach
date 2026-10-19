@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="ФиджиКоуч — ИИ-тренер для фиджитал-спортсмена">
+<title>ФиджиКоуч</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: summary first (карта спортсмена), then the two phases side-coded blue/orange, then plan and coach chat. */
+:root{
+  --bg:#F1F3F6; --surface:#FCFDFE; --ink:#121C27; --muted:#556170; --line:#D7DDE4;
+  --digi:#2B55F0; --digi-soft:#E3E9FF; --phys:#D9520B; --phys-soft:#FCE6D9;
+  --good:#1D7F47; --warn:#9A6410; --bad:#B8322A;
+  --f-display:"Unbounded","Golos Text",Arial,sans-serif;
+  --f-body:"Golos Text",Arial,sans-serif;
+  --f-mono:"JetBrains Mono","Courier New",monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D131A; --surface:#151E28; --ink:#E7ECF1; --muted:#9AA6B4; --line:#273340;
+  --digi:#7891FF; --digi-soft:#1C2647; --phys:#FF8445; --phys-soft:#3A2116;
+  --good:#4CC481; --warn:#E3AA4A; --bad:#F2766B; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0D131A; --surface:#151E28; --ink:#E7ECF1; --muted:#9AA6B4; --line:#273340;
+  --digi:#7891FF; --digi-soft:#1C2647; --phys:#FF8445; --phys-soft:#3A2116;
+  --good:#4CC481; --warn:#E3AA4A; --bad:#F2766B; color-scheme:dark }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;text-wrap:balance;margin:0;line-height:1.15}
+h2{font-size:clamp(22px,3.2vw,30px)}
+h3{font-size:17px;font-weight:500}
+p{margin:0}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--digi);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+
+/* header */
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+header.top .wrap{padding-block:28px 22px;display:flex;flex-direction:column;gap:14px}
+.brand{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{width:40px;height:40px;flex:none}
+.brand h1{font-size:clamp(26px,4vw,36px);letter-spacing:-.01em}
+.brand h1 .d{color:var(--digi)} .brand h1 .p{color:var(--phys)}
+.lead{max-width:68ch;color:var(--muted)}
+.phases{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;letter-spacing:.02em}
+.chip.d{background:var(--digi-soft);color:var(--digi)}
+.chip.p{background:var(--phys-soft);color:var(--phys)}
+.chip.n{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+nav.steps{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+nav.steps .wrap{display:flex;gap:4px;overflow-x:auto;padding-block:8px;scrollbar-width:none}
+nav.steps a{flex:none;text-decoration:none;color:var(--muted);font-weight:600;font-size:14px;padding:8px 12px;border-radius:10px;white-space:nowrap}
+nav.steps a:hover{background:var(--bg);color:var(--ink)}
+nav.steps a b{font-family:var(--f-mono);color:var(--ink);margin-right:6px}
+
+main .wrap{display:flex;flex-direction:column;gap:56px;padding-block:36px 72px}
+section.blk{display:flex;flex-direction:column;gap:18px;scroll-margin-top:72px}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.eyebrow.d{color:var(--digi)} .eyebrow.p{color:var(--phys)} .eyebrow.n{color:var(--muted)}
+.sechead{display:flex;flex-direction:column;gap:6px}
+.sechead p{max-width:70ch;color:var(--muted)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+
+/* overview */
+.over{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px}
+@media (max-width:820px){.over{grid-template-columns:minmax(0,1fr)}}
+.radarbox{display:flex;flex-direction:column;align-items:center;gap:10px}
+#radar{width:100%;max-width:520px;height:auto}
+.banner{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:10px 14px;font-size:14px}
+.scores{display:flex;flex-direction:column;gap:14px}
+.phaseSum{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ps{border-radius:12px;padding:14px}
+.ps.d{background:var(--digi-soft)} .ps.p{background:var(--phys-soft)}
+.ps .lab{font-size:13px;font-weight:600}
+.ps.d .lab{color:var(--digi)} .ps.p .lab{color:var(--phys)}
+.ps .big{font-family:var(--f-display);font-size:38px;font-weight:700;line-height:1.1}
+.axlist{display:flex;flex-direction:column;gap:8px}
+.ax{display:grid;grid-template-columns:110px 1fr 104px;gap:10px;align-items:center;font-size:14px}
+.bar{height:10px;border-radius:5px;background:var(--bg);border:1px solid var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px}
+.ax .v{text-align:right}
+.src{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.insight{border-left:3px solid var(--ink);padding:4px 0 4px 14px;font-size:15px}
+
+/* digital */
+.tests{display:flex;gap:8px;flex-wrap:wrap}
+.tbtn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 14px;font-weight:600;font-size:14px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left}
+.tbtn small{font-weight:400;color:var(--muted);font-size:12.5px}
+.tbtn[aria-pressed="true"]{border-color:var(--digi);box-shadow:inset 0 0 0 1px var(--digi)}
+.tbtn .res{font-family:var(--f-mono);font-size:12px;color:var(--digi)}
+#arena{position:relative;height:340px;border-radius:var(--r);background:var(--digi-soft);border:1px solid var(--line);overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}
+#arena .msg{display:flex;flex-direction:column;gap:8px;align-items:center;max-width:46ch}
+#arena .msg strong{font-family:var(--f-display);font-size:24px}
+#arena.go{background:var(--digi);color:#fff}
+#arena.false{background:var(--phys-soft)}
+.hud{position:absolute;top:12px;left:14px;right:14px;display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:13px;color:var(--muted);pointer-events:none}
+#arena.go .hud{color:#E3E9FF}
+.target{position:absolute;width:52px;height:52px;border-radius:50%;border:none;padding:0;background:radial-gradient(circle,var(--surface) 0 18%,var(--digi) 19% 42%,var(--surface) 43% 60%,var(--digi) 61%);transform:translate(-50%,-50%);touch-action:manipulation}
+.missmark{position:absolute;transform:translate(-50%,-50%);color:var(--phys);font-weight:700;font-size:22px;pointer-events:none;animation:missfade .6s ease-out forwards}
+@keyframes missfade{to{opacity:0;transform:translate(-50%,-80%)}}
+.stim{width:120px;height:120px;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:700;font-size:18px;color:#fff}
+.stim.go{background:var(--digi);border-radius:50%}
+.stim.no{background:var(--phys);border-radius:6px}
+.btn{border:none;border-radius:10px;padding:11px 18px;font-weight:600;background:var(--ink);color:var(--surface)}
+.btn.d{background:var(--digi);color:#fff}
+.btn.p{background:var(--phys);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* physical */
+.physgrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px}
+@media (max-width:820px){.physgrid{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;background:#0B1016;border-radius:var(--r);overflow:hidden;aspect-ratio:16/10;max-width:100%;display:flex;align-items:center;justify-content:center}
+.stage canvas{max-width:100%;max-height:100%;display:block}
+.stage .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#C9D2DC;padding:20px;text-align:center}
+.stage .ph svg{width:120px;height:120px}
+.uploads{display:flex;gap:8px;flex-wrap:wrap}
+.filebtn{position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.status{font-size:14px;color:var(--muted)}
+.status.err{color:var(--bad)}
+.live{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.kpi{background:var(--phys-soft);border-radius:12px;padding:12px}
+.kpi .lab{font-size:12px;font-weight:600;color:var(--phys)}
+.kpi .num{font-family:var(--f-display);font-size:28px;font-weight:700;line-height:1.15}
+.reps{display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto}
+.rep{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;font-size:14px;padding:8px 10px;border-radius:8px;background:var(--bg)}
+.rep .n{font-family:var(--f-mono);color:var(--muted)}
+.tag{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px}
+.tag.ok{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.tag.fix{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.howto{font-size:14px;color:var(--muted);display:flex;flex-direction:column;gap:4px;padding-left:18px;margin:0}
+.manual{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px}
+.manual input{width:84px;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+
+/* plan */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+th{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.day{font-family:var(--f-display);font-weight:500;white-space:nowrap}
+.task{display:flex;flex-direction:column;gap:2px}
+.task .k{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.task.d .k{color:var(--digi)} .task.p .k{color:var(--phys)} .task.n .k{color:var(--muted)}
+.focus{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:14px}
+
+/* chat */
+.chat{display:flex;flex-direction:column;gap:12px}
+.log{display:flex;flex-direction:column;gap:10px;max-height:420px;overflow:auto;padding:4px}
+.msgc{max-width:80%;padding:10px 14px;border-radius:14px;font-size:15px;white-space:pre-wrap;overflow-wrap:anywhere}
+.msgc.me{align-self:flex-end;background:var(--ink);color:var(--surface);border-bottom-right-radius:4px}
+.msgc.bot{align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msgc .who{display:block;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.quick{display:flex;gap:6px;flex-wrap:wrap}
+.quick button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:13px}
+form.ask{display:flex;gap:8px}
+form.ask input{flex:1;min-width:0;padding:11px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit}
+.mode{font-size:13px;color:var(--muted)}
+
+.squat{display:flex;flex-direction:column;gap:14px;border-color:var(--phys)}
+.squat.digi{border-color:var(--digi)}
+tr.grp td{background:var(--bg);font-weight:600;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.sqhead{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tablewrap.flat{border:none;border-radius:0;background:transparent}
+table.sq{min-width:620px}
+table.sq td{font-size:14px}
+table.sq td.val{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700}
+table.sq td.to{white-space:nowrap}
+.flow{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+.flow .step{flex:1 1 220px;min-width:0;background:var(--bg);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.flow .step .k{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.flow .step a{color:var(--ink);font-weight:600}
+.repdet summary{cursor:pointer;font-weight:600;font-size:14px}
+.why{font-size:14px;color:var(--muted);max-width:80ch}
+.why b{color:var(--ink)}
+.axd{grid-column:1 / -1;font-size:12.5px;color:var(--muted);margin-top:-4px}
+footer{border-top:1px solid var(--line);background:var(--surface)}
+footer .wrap{padding-block:22px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:520px){.ax{grid-template-columns:86px 1fr 96px}.live{grid-template-columns:repeat(3,minmax(0,1fr))}.kpi .num{font-size:22px}#arena{height:300px}}
+
+/* ===== visual layer v2: arena-at-night hero, phase-coded stages ===== */
+:root{ --r:18px; --shadow:0 1px 2px rgba(17,28,45,.05),0 10px 30px -14px rgba(17,28,45,.18); --night:#0B1220; --night2:#121B2E; --nightline:#22304A; --snow:#F3F6FA; --digiN:#5B7BFF; --physN:#FF7A33 }
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --shadow:0 1px 0 rgba(255,255,255,.03),0 12px 30px -16px rgba(0,0,0,.6) }}
+:root[data-theme="dark"]{ --shadow:0 1px 0 rgba(255,255,255,.03),0 12px 30px -16px rgba(0,0,0,.6) }
+body{font-size:16.5px}
+body::before{background:var(--night)}
+.hero{position:relative;overflow:hidden;background:var(--night);color:var(--snow);isolation:isolate}
+.hero-bg{position:absolute;inset:0;z-index:-1;display:grid;grid-template-columns:1fr 1fr}
+.hb-d{background:radial-gradient(circle at 1.5px 1.5px,rgba(91,123,255,.16) 1.2px,transparent 1.8px) 0 0/16px 16px;mask-image:linear-gradient(90deg,transparent 0,#000 40%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 40%,transparent 100%)}
+.hb-p{background:repeating-linear-gradient(115deg,transparent 0 46px,rgba(255,122,51,.13) 46px 48px);mask-image:linear-gradient(270deg,#000 10%,transparent 95%);-webkit-mask-image:linear-gradient(270deg,#000 10%,transparent 95%)}
+.seam{position:absolute;left:50%;top:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,var(--digiN) 30%,var(--physN) 70%,transparent);opacity:.5}
+.hero-in{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:40px;align-items:center;padding-block:56px 64px}
+@media (max-width:860px){.hero-in{grid-template-columns:minmax(0,1fr);padding-block:36px 44px}.hero-art{max-width:220px;justify-self:center;order:-1}.seam{display:none}}
+.hero-txt{display:flex;flex-direction:column;gap:22px;min-width:0;position:relative;z-index:1}
+.hero .brand{gap:12px}
+.hero .logo{width:34px;height:34px}
+.kicker{font-size:14px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#E6ECF5}
+.hero h1{font-size:clamp(44px,7vw,96px);line-height:1;letter-spacing:-.03em;font-weight:700;white-space:nowrap}
+.hero h1{text-shadow:0 2px 24px rgba(11,18,32,.9)}
+.hero h1 .d{color:#8BA2FF} .hero h1 .p{color:#FF8A47}
+.hero .lead{color:#DCE4EF;font-size:18px;max-width:52ch;line-height:1.55}
+.cta{display:flex;gap:10px;flex-wrap:wrap}
+.btn.big{padding:14px 22px;font-size:16px;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center}
+.btn.d{background:var(--digiN);color:#fff;box-shadow:0 8px 24px -10px rgba(91,123,255,.8)}
+.btn.ghost-dark{background:rgba(255,255,255,.06);color:var(--snow);border:1px solid rgba(255,255,255,.18)}
+.facts{list-style:none;margin:6px 0 0;padding:0;display:flex;gap:28px;flex-wrap:wrap}
+.facts li{display:flex;flex-direction:column;gap:2px}
+.facts b{font-size:30px;font-weight:700;color:var(--snow);line-height:1}
+.facts span{font-size:13px;color:#B7C4D8}
+.hero-art svg{width:100%;height:auto;display:block;filter:drop-shadow(0 30px 60px rgba(0,0,0,.45))}
+@media (prefers-reduced-motion:no-preference){
+  .hero-txt>*{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+  .hero-txt>*:nth-child(2){animation-delay:.06s}.hero-txt>*:nth-child(3){animation-delay:.12s}.hero-txt>*:nth-child(4){animation-delay:.18s}.hero-txt>*:nth-child(5){animation-delay:.24s}
+  .hero-art{animation:rise .9s .15s cubic-bezier(.2,.7,.2,1) both}
+  @keyframes rise{from{opacity:.001;transform:translateY(14px)}}
+}
+
+/* nav */
+nav.steps{background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:saturate(1.4) blur(10px);-webkit-backdrop-filter:saturate(1.4) blur(10px)}
+nav.steps .wrap{gap:6px;padding-block:10px}
+nav.steps a{border-radius:999px;padding:8px 14px;border:1px solid transparent;transition:background .2s,color .2s,border-color .2s}
+nav.steps a b{color:var(--muted);font-weight:700;font-size:12px;margin-right:8px}
+nav.steps a.on{background:var(--ink);color:var(--surface)}
+nav.steps a.on b{color:inherit;opacity:.7}
+nav.steps a.d.on{background:var(--digi);color:#fff} nav.steps a.p.on{background:var(--phys);color:#fff}
+
+/* section heads */
+main .wrap{gap:88px;padding-block:64px 96px}
+.sechead{display:grid;grid-template-columns:auto minmax(0,1fr);gap:22px;align-items:start}
+.sh-t{display:flex;flex-direction:column;gap:8px;min-width:0}
+.stnum{font-family:var(--f-display);font-weight:700;font-size:clamp(56px,7vw,84px);line-height:.85;letter-spacing:-.04em;color:transparent;-webkit-text-stroke:2px var(--line)}
+.stnum.d{-webkit-text-stroke-color:var(--digi)} .stnum.p{-webkit-text-stroke-color:var(--phys)} .stnum.n{-webkit-text-stroke-color:var(--ink)}
+h2{font-size:clamp(28px,3.6vw,40px);letter-spacing:-.02em}
+.sechead p{font-size:16.5px}
+@media (max-width:520px){.sechead{grid-template-columns:minmax(0,1fr);gap:6px}.stnum{font-size:48px}}
+
+/* panels */
+.panel{border-radius:var(--r);box-shadow:var(--shadow);padding:24px}
+.banner{border-radius:14px;border-style:solid;background:var(--surface)}
+
+/* digital */
+.tests{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:620px){.tests{grid-template-columns:minmax(0,1fr)}}
+.tbtn{border-radius:16px;padding:16px 18px;gap:4px;font-size:16px;font-family:var(--f-display);font-weight:500;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s,border-color .15s;position:relative}
+.tbtn:hover{transform:translateY(-2px)}
+.tbtn small{font-family:var(--f-body);font-size:13px}
+.tbtn .res{font-size:12.5px;margin-top:4px}
+.tbtn[aria-pressed="true"]{background:var(--digi);border-color:var(--digi);color:#fff;box-shadow:0 12px 28px -14px var(--digi)}
+.tbtn[aria-pressed="true"] small,.tbtn[aria-pressed="true"] .res{color:rgba(255,255,255,.85)}
+#arena{height:380px;border-radius:22px;border:1px solid color-mix(in srgb,var(--digi) 25%,var(--line));background:radial-gradient(circle at 1.5px 1.5px,color-mix(in srgb,var(--digi) 22%,transparent) 1.5px,transparent 2px) 0 0/16px 16px,var(--digi-soft);transition:background-color .12s}
+#arena .msg strong{font-size:28px;letter-spacing:-.01em}
+#arena.go{background:radial-gradient(circle at 1.5px 1.5px,rgba(255,255,255,.25) 1.5px,transparent 2px) 0 0/16px 16px,var(--digi);box-shadow:inset 0 0 120px rgba(255,255,255,.18)}
+#arena.go .msg strong{font-size:56px}
+.btn{border-radius:12px;transition:transform .15s,filter .15s}
+.btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.05)}
+.stim{width:136px;height:136px;font-size:20px;box-shadow:0 18px 40px -16px rgba(0,0,0,.45)}
+
+/* physical */
+.stage{border-radius:22px;background:repeating-linear-gradient(115deg,#0B1016 0 40px,#0E151D 40px 42px),#0B1016;box-shadow:var(--shadow)}
+.stage .ph p{max-width:30ch;font-size:15.5px}
+.kpi{border-radius:14px;padding:14px}
+.kpi .num{font-size:32px;color:var(--ink)}
+.rep{border-radius:10px}
+
+/* map */
+.radarbox{background:radial-gradient(circle at 50% 50%,var(--surface) 55%,var(--bg))}
+.ps{border-radius:16px;padding:18px}
+.ps .big{font-size:48px}
+.bar{height:12px;border-radius:6px;border:none;background:var(--bg)}
+.bar i{border-radius:6px}
+.insight{border-left-width:4px;border-image:linear-gradient(var(--digi),var(--phys)) 1;padding:6px 0 6px 16px}
+
+/* plan */
+.tablewrap{border-radius:var(--r);box-shadow:var(--shadow)}
+.tablewrap.flat{box-shadow:none}
+tbody tr{transition:background .15s}
+tbody tr:hover{background:color-mix(in srgb,var(--bg) 70%,transparent)}
+td.day{font-size:16px}
+#planBody td.day{width:90px}
+
+/* chat */
+.chat{gap:14px}
+.log{min-height:120px}
+.msgc{border-radius:18px;padding:12px 16px;line-height:1.5}
+.msgc.bot{background:var(--surface);box-shadow:var(--shadow)}
+.msgc.me{background:linear-gradient(135deg,var(--digi),color-mix(in srgb,var(--digi) 60%,var(--phys)));color:#fff}
+.quick button{transition:border-color .15s,color .15s}
+.quick button:hover{border-color:var(--digi);color:var(--digi)}
+form.ask input{border-radius:14px;padding:13px 16px}
+
+/* footer */
+footer{background:var(--night);border-top:none}
+footer .wrap{color:#93A3BD;padding-block:36px;gap:8px}
+.f-brand{font-family:var(--f-display);font-weight:700;font-size:22px;margin-bottom:6px}
+.f-brand .d{color:var(--digiN)} .f-brand .p{color:var(--physN)}
+</style>
+</head>
+<body>
+
+
+<header class="hero">
+  <div class="hero-bg" aria-hidden="true"><div class="hb-d"></div><div class="hb-p"></div><div class="seam"></div></div>
+  <div class="wrap hero-in">
+    <div class="hero-txt">
+      <div class="brand">
+        <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="17" height="36" rx="5" fill="#5B7BFF"/><rect x="21" y="2" width="17" height="36" rx="5" fill="#FF7A33"/><circle cx="20" cy="20" r="7" fill="#0B1220"/><circle cx="20" cy="20" r="3" fill="#F3F6FA"/></svg>
+        <span class="kicker">ИИ-тренер для фиджитал-спорта</span>
+      </div>
+      <h1><span class="d">Фиджи</span><span class="p">Коуч</span></h1>
+      <p class="lead">Один тренер для обеих фаз соревнования. Мини-тесты в браузере меряют навыки киберфазы, нейросеть по видео оценивает технику физической, а ИИ сводит всё в карту спортсмена и план на неделю.</p>
+      <div class="cta">
+        <a class="btn d big" href="#digital">Начать с цифровой фазы</a>
+        <a class="btn ghost-dark big" href="#physical">Проверить технику по видео</a>
+      </div>
+      <ul class="facts">
+        <li><b class="mono">6</b><span>показателей на карте</span></li>
+        <li><b class="mono">33</b><span>точки тела на кадре</span></li>
+        <li><b class="mono">3</b><span>проверки в цифровой фазе</span></li>
+      </ul>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <svg viewBox="0 0 360 360">
+        <defs>
+          <pattern id="px" width="12" height="12" patternUnits="userSpaceOnUse"><rect x="4" y="4" width="3" height="3" fill="#5B7BFF" opacity=".55"/></pattern>
+          <clipPath id="lh"><rect x="0" y="0" width="180" height="360"/></clipPath>
+          <clipPath id="rh"><rect x="180" y="0" width="180" height="360"/></clipPath>
+        </defs>
+        <circle cx="180" cy="180" r="170" fill="#121B2E" stroke="#22304A"/>
+        <g clip-path="url(#lh)"><circle cx="180" cy="180" r="170" fill="url(#px)"/></g>
+        <g clip-path="url(#rh)" fill="none" stroke="#FF7A33" stroke-opacity=".35" stroke-width="2">
+          <path d="M180 40 C260 60 320 120 330 200"/><path d="M180 70 C245 88 296 136 304 204"/><path d="M180 100 C230 116 272 152 278 208"/>
+        </g>
+        <g stroke="#5B7BFF" stroke-width="2" fill="none" opacity=".9"><circle cx="112" cy="118" r="26"/><circle cx="112" cy="118" r="12"/><path d="M112 82v18M112 136v18M76 118h18M130 118h18"/></g>
+        <g fill="none" stroke="#FF7A33" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M214 142 L188 212"/><path d="M188 212 L244 210 L236 274 L258 278"/><path d="M212 150 L268 166"/>
+        </g>
+        <circle cx="222" cy="116" r="15" fill="none" stroke="#FF7A33" stroke-width="7"/>
+        <path d="M222 211 A 22 22 0 0 0 240 232" fill="none" stroke="#F3F6FA" stroke-width="2.5"/>
+        <g fill="#8EA6FF" stroke="#0B1220" stroke-width="3"><circle cx="214" cy="142" r="7"/><circle cx="188" cy="212" r="7"/><circle cx="244" cy="210" r="7"/><circle cx="236" cy="274" r="7"/></g>
+        <text x="256" y="236" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#F3F6FA">94°</text>
+        <line x1="180" y1="16" x2="180" y2="344" stroke="#F3F6FA" stroke-opacity=".25" stroke-dasharray="4 6"/>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<nav class="steps" aria-label="Разделы"><div class="wrap">
+  <a href="#digital" class="d"><b>01</b>Цифровая фаза</a>
+  <a href="#physical" class="p"><b>02</b>Физическая фаза</a>
+  <a href="#map"><b>03</b>Карта спортсмена</a>
+  <a href="#plan"><b>04</b>План</a>
+  <a href="#coach"><b>05</b>ИИ-тренер</a>
+</div></nav>
+
+<main><div class="wrap">
+
+<section class="blk" id="digital">
+  <div class="sechead"><span class="stnum d" aria-hidden="true">01</span><div class="sh-t"><span class="eyebrow d">Этап 1 · киберфаза</span><h2>Цифровая фаза</h2>
+  <p>Три коротких теста на навыки, от которых зависит игра в киберфазе: скорость реакции, точность наведения и умение быстро решать, когда действовать, а когда нет.</p></div></div>
+  <div class="tests" role="group" aria-label="Выбор теста">
+    <button class="tbtn" type="button" data-test="react" aria-pressed="true">Реакция<small>5 сигналов, ~20 сек</small><span class="res" id="r-react"></span></button>
+    <button class="tbtn" type="button" data-test="aim" aria-pressed="false">Точность<small>Цели за 20 сек</small><span class="res" id="r-aim"></span></button>
+    <button class="tbtn" type="button" data-test="decide" aria-pressed="false">Решения<small>Жми / стоп, 24 стимула</small><span class="res" id="r-decide"></span></button>
+  </div>
+  <div id="arena" tabindex="0" aria-live="polite"></div>
+  <div class="panel squat digi" id="digSum" hidden>
+    <div class="sqhead"><h3>Что измерено в тестах</h3><span class="chip d" id="dgDone"></span></div>
+    <div class="tablewrap flat"><table class="sq"><thead><tr><th>Измерено</th><th>Значение</th><th>Как превращается в оценку</th><th>В карту</th></tr></thead><tbody id="dgBody"></tbody></table></div>
+    <div class="flow" id="dgFlow"></div>
+  </div>
+</section>
+
+<section class="blk" id="physical">
+  <div class="sechead"><span class="stnum p" aria-hidden="true">02</span><div class="sh-t"><span class="eyebrow p">Этап 2 · на площадке</span><h2>Физическая фаза</h2>
+  <p>Нейросеть MediaPipe Pose находит 33 точки тела на каждом кадре видео. По углу в колене и наклону корпуса ФиджиКоуч сам считает приседания и оценивает технику каждого повторения.</p></div></div>
+  <div class="physgrid">
+    <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+      <div class="stage" id="stage">
+        <canvas id="cv" width="960" height="600" hidden></canvas>
+        <div class="ph" id="ph">
+          <svg viewBox="0 0 120 120" aria-hidden="true"><g fill="none" stroke="#FF8445" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><circle cx="60" cy="20" r="9"/><path d="M60 30 L56 62 L80 74 L74 104"/><path d="M58 40 L84 48"/><path d="M56 62 L40 80 L46 104"/></g><g fill="#7891FF"><circle cx="56" cy="62" r="4"/><circle cx="80" cy="74" r="4"/><circle cx="74" cy="104" r="4"/></g></svg>
+          <p>Включите камеру или загрузите видео приседаний</p>
+        </div>
+      </div>
+      <div class="uploads">
+        <label class="btn p filebtn">Загрузить видео<input type="file" id="fileIn" accept="video/*"></label>
+        <button class="btn ghost" type="button" id="liveBtn">Камера в реальном времени</button>
+        <label class="btn ghost filebtn">Снять видео<input type="file" id="camIn" accept="video/*" capture="environment"></label>
+        <button class="btn ghost" type="button" id="stopBtn" hidden>Остановить анализ</button>
+      </div>
+      <p class="status" id="pstatus" aria-live="polite">Нейросеть загрузится при первом запуске (около 12 МБ).</p>
+      <ol class="howto">
+        <li>Поставьте телефон или ноутбук в 2–3 метрах, встаньте боком, чтобы в кадр попало всё тело.</li>
+        <li>Сделайте 8–15 приседаний в обычном темпе, 20–40 секунд видео.</li>
+        <li>Видео обрабатывается прямо на устройстве и никуда не отправляется.</li>
+      </ol>
+    </div>
+    <div class="panel" style="display:flex;flex-direction:column;gap:14px;min-width:0">
+      <div class="live">
+        <div class="kpi"><div class="lab">Повторения</div><div class="num mono" id="kReps">0</div></div>
+        <div class="kpi"><div class="lab">Угол колена</div><div class="num mono" id="kAngle">—</div></div>
+        <div class="kpi"><div class="lab">Наклон</div><div class="num mono" id="kLean">—</div></div>
+      </div>
+      <h3>Разбор повторений</h3>
+      <div class="reps" id="reps"><p class="muted" style="font-size:14px">Здесь появится оценка каждого приседания: глубина, наклон корпуса, темп.</p></div>
+      <div class="manual"><span>Нет видео? Число приседаний за 30 сек:</span><input type="number" id="manualReps" min="0" max="60" inputmode="numeric" aria-label="Число приседаний за 30 секунд"><button class="btn ghost" type="button" id="manualBtn">Учесть</button></div>
+    </div>
+  </div>
+  <div class="panel squat" id="squatSum" hidden>
+    <div class="sqhead"><h3>Что считано с видео</h3><span class="chip p" id="sqSrc"></span></div>
+    <div class="tablewrap flat"><table class="sq"><thead><tr><th>Измерено нейросетью</th><th>Значение</th><th>Как превращается в оценку</th><th>В карту</th></tr></thead><tbody id="sqBody"></tbody></table></div>
+    <div class="flow" id="sqFlow"></div>
+    <details class="repdet"><summary>Все повторения по отдельности</summary><div class="tablewrap flat"><table class="sq"><thead><tr><th>№</th><th>Мин. угол колена</th><th>Макс. наклон</th><th>Время</th><th>Оценка</th></tr></thead><tbody id="sqReps"></tbody></table></div></details>
+  </div>
+</section>
+
+<section class="blk" id="map">
+  <div class="sechead"><span class="stnum n" aria-hidden="true">03</span><div class="sh-t"><span class="eyebrow n">Этап 3 · итог</span><h2>Карта спортсмена</h2>
+  <p>Шесть показателей по двум фазам соревнования. Цифровая фаза слева, физическая справа. Каждый показатель от 0 до 100.</p></div></div>
+  <div class="banner" id="banner"><span id="bannerText">Карта пока пустая. Пройдите тесты, и здесь появятся ваши показатели.</span><button class="btn ghost" id="resetBtn" type="button">Сбросить результаты</button></div>
+  <div class="over">
+    <div class="panel radarbox"><svg id="radar" viewBox="-70 0 560 400" role="img" aria-label="Радар-диаграмма показателей спортсмена"></svg></div>
+    <div class="panel scores">
+      <div class="phaseSum">
+        <div class="ps d"><div class="lab">Цифровая фаза</div><div class="big mono" id="sumD">0</div></div>
+        <div class="ps p"><div class="lab">Физическая фаза</div><div class="big mono" id="sumP">0</div></div>
+      </div>
+      <div class="axlist" id="axlist"></div>
+      <p class="insight" id="insight"></p>
+    </div>
+  </div>
+</section>
+
+<section class="blk" id="plan">
+  <div class="sechead"><span class="stnum n" aria-hidden="true">04</span><div class="sh-t"><span class="eyebrow n">Этап 4 · тренировки</span><h2>План на неделю</h2>
+  <p>План собирается из двух самых слабых показателей карты. В каждом тренировочном дне есть задание на цифровую и на физическую фазу, потому что в фиджитал-матче они идут подряд.</p></div></div>
+  <div class="focus" id="focus"></div>
+  <p class="why" id="planWhy"></p>
+  <div class="tablewrap"><table><thead><tr><th style="width:90px">День</th><th>Цифровая фаза</th><th>Физическая фаза</th><th style="width:90px">Время</th></tr></thead><tbody id="planBody"></tbody></table></div>
+</section>
+
+<section class="blk" id="coach">
+  <div class="sechead"><span class="stnum n" aria-hidden="true">05</span><div class="sh-t"><span class="eyebrow n">Этап 5 · вопросы</span><h2>ИИ-тренер</h2>
+  <p>Задайте вопрос о своих результатах. Тренер видит вашу карту и план и отвечает с опорой на них.</p></div></div>
+  <div class="panel chat">
+    <div class="log" id="log"></div>
+    <div class="quick" id="quick">
+      <button type="button">Что подтянуть в первую очередь?</button>
+      <button type="button">Как улучшить технику приседа?</button>
+      <button type="button">Как совмещать тренировки двух фаз?</button>
+    </div>
+    <form class="ask" id="askForm"><input id="askIn" type="text" placeholder="Например: почему у меня низкий ритм?" aria-label="Вопрос тренеру" autocomplete="off"><button class="btn" type="submit" id="askBtn">Спросить</button></form>
+    <p class="mode" id="mode">Подключаю ИИ…</p>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+</div></main>
+
+<footer><div class="wrap"><div class="f-brand"><span class="d">Фиджи</span><span class="p">Коуч</span></div>
+  <span>ФиджиКоуч — прототип для Всероссийского конкурса «Искусственный интеллект: идеи без границ», 2026.</span>
+  <span>Распознавание позы: MediaPipe Pose (Google), работает локально в браузере. Оценки ориентировочные и не заменяют тренера или врача.</span>
+</div></footer>
+
+<script>
+(function(){
+"use strict";
+const $ = s => document.querySelector(s);
+const clamp = (v,a=0,b=100) => Math.max(a, Math.min(b, v));
+const r0 = v => Math.round(v);
+
+/* ---------- state ---------- */
+const AX = [
+  {k:"react", name:"Реакция", ph:"d"},
+  {k:"aim", name:"Точность", ph:"d"},
+  {k:"decide", name:"Решения", ph:"d"},
+  {k:"power", name:"Объём", ph:"p"},
+  {k:"tech", name:"Техника", ph:"p"},
+  {k:"rhythm", name:"Ритм", ph:"p"},
+];
+let S = {scores:{}, src:{}, raw:{}};
+const KEY = "phygicoach.v1";
+try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.scores) S = s; } catch(e) {}
+function clean(){ S.scores = S.scores||{}; S.src = S.src||{}; S.raw = S.raw||{}; Object.keys(S.scores).forEach(k=>{ if(!S.src[k]) delete S.scores[k]; }); }
+clean();
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+
+const SRC = {test:"тест", video:"видео", camera:"камера", manual:"вручную", you:"вы"};
+const mine = k => !!S.src[k];
+const srcLab = k => S.src[k] ? (SRC[S.src[k]]||"вы") : "пример";
+function setScore(k, v, raw, src){ S.scores[k] = r0(clamp(v)); S.src[k] = src || "test"; if (raw) S.raw[k] = raw; save(); renderAll(); }
+
+/* ---------- overview ---------- */
+function phaseAvg(ph){ const a = AX.filter(x=>x.ph===ph && mine(x.k)); return a.length ? r0(a.reduce((s,x)=>s+S.scores[x.k],0)/a.length) : null; }
+const fmt = v => v==null ? "—" : v;
+const sc = k => mine(k) ? S.scores[k] : null;
+function cssVar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+function renderRadar(){
+  const svg = $("#radar"), cx=210, cy=200, R=140, n=AX.length;
+  const ang = i => (-90 + i*360/n) * Math.PI/180;
+  const pt = (i, v) => [cx + Math.cos(ang(i))*R*v/100, cy + Math.sin(ang(i))*R*v/100];
+  let h = "";
+  // phase halves
+  h += `<path d="M${cx} ${cy-R-14} A${R+14} ${R+14} 0 0 0 ${cx} ${cy+R+14} Z" fill="var(--digi-soft)" opacity=".7"/>`;
+  h += `<path d="M${cx} ${cy-R-14} A${R+14} ${R+14} 0 0 1 ${cx} ${cy+R+14} Z" fill="var(--phys-soft)" opacity=".7"/>`;
+  [25,50,75,100].forEach(l=>{
+    const ps = AX.map((_,i)=>pt(i,l).join(",")).join(" ");
+    h += `<polygon points="${ps}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  });
+  AX.forEach((_,i)=>{ const [x,y]=pt(i,100); h += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`; });
+  // rotate so digital on left: order positions: we map digital axes to left side
+  const poly = AX.map((a,i)=>pt(i,S.scores[a.k]).join(",")).join(" ");
+  h += `<polygon points="${poly}" fill="var(--ink)" fill-opacity=".12" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  AX.forEach((a,i)=>{
+    const [x,y]=pt(i,S.scores[a.k]);
+    h += `<circle cx="${x}" cy="${y}" r="5.5" fill="${a.ph==="d"?"var(--digi)":"var(--phys)"}" stroke="var(--surface)" stroke-width="2"/>`;
+    const [lx,ly]=pt(i,122);
+    const anchor = Math.abs(lx-cx)<8 ? "middle" : (lx<cx ? "end" : "start");
+    h += `<text x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="middle" font-family="Golos Text, Arial, sans-serif" font-size="14" font-weight="600" fill="${a.ph==="d"?"var(--digi)":"var(--phys)"}">${a.name}</text>`;
+    h += `<text x="${lx}" y="${ly+17}" text-anchor="${anchor}" dominant-baseline="middle" font-family="JetBrains Mono, monospace" font-size="13" fill="var(--muted)">${S.scores[a.k]}</text>`;
+  });
+  svg.innerHTML = h;
+}
+// order axes on circle so digital occupy left half: positions 0 top, going clockwise -> put physical at 1,2 (right) and digital at 4,5 (left)?
+// Simpler: reorder AX for drawing
+const DRAW_ORDER = ["react","power","tech","rhythm","decide","aim"];
+
+function renderRadarOrdered(){
+  const svg = $("#radar"), cx=210, cy=200, R=132;
+  // place: digital on left (angles 210..330 => left side), physical on right
+  const pos = {power:-60+0, tech:0, rhythm:60, decide:120+60, aim:240, react:300};
+  // angles measured from top clockwise
+  const angOf = {react:-30, aim:-90, decide:-150, power:30, tech:90, rhythm:150};
+  const P = (k,v) => { const a=(angOf[k]-90)*Math.PI/180; return [cx+Math.cos(a)*R*v/100, cy+Math.sin(a)*R*v/100]; };
+  const order = ["power","tech","rhythm","decide","aim","react"]; // clockwise from upper-right
+  let h = `<path d="M${cx} ${cy-R-16} A${R+16} ${R+16} 0 0 1 ${cx} ${cy+R+16} Z" fill="var(--phys-soft)"/>`;
+  h += `<path d="M${cx} ${cy-R-16} A${R+16} ${R+16} 0 0 0 ${cx} ${cy+R+16} Z" fill="var(--digi-soft)"/>`;
+  [25,50,75,100].forEach(l=>{ h += `<polygon points="${order.map(k=>P(k,l).join(",")).join(" ")}" fill="none" stroke="var(--line)" stroke-width="1"/>`; });
+  order.forEach(k=>{ const [x,y]=P(k,100); h += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)"/>`; });
+  if (order.some(mine)) h += `<polygon points="${order.map(k=>P(k,sc(k)||0).join(",")).join(" ")}" fill="var(--ink)" fill-opacity=".1" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  order.forEach(k=>{
+    const a = AX.find(x=>x.k===k), col = a.ph==="d"?"var(--digi)":"var(--phys)";
+    if (mine(k)){ const [x,y]=P(k,S.scores[k]);
+    h += `<circle cx="${x}" cy="${y}" r="5.5" fill="${col}" stroke="var(--surface)" stroke-width="2"/>`; }
+    const [lx,ly]=P(k,118);
+    const anchor = lx<cx-4 ? "end" : (lx>cx+4 ? "start" : "middle");
+    h += `<text x="${lx}" y="${ly-8}" text-anchor="${anchor}" font-family="Golos Text, Arial, sans-serif" font-size="14" font-weight="600" fill="${col}">${a.name}</text>`;
+    h += `<text x="${lx}" y="${ly+10}" text-anchor="${anchor}" font-family="JetBrains Mono, monospace" font-size="13" fill="var(--muted)">${mine(k)?S.scores[k]:"нет данных"}</text>`;
+  });
+  if (!order.some(mine)) h += `<text x="${cx}" y="${cy+5}" text-anchor="middle" font-family="Golos Text, Arial, sans-serif" font-size="15" fill="var(--muted)">Пройдите первый тест</text>`;
+  svg.innerHTML = h;
+}
+
+function renderScores(){
+  $("#sumD").textContent = fmt(phaseAvg("d"));
+  $("#sumP").textContent = fmt(phaseAvg("p"));
+  $("#axlist").innerHTML = AX.map(a=>{
+    const v = sc(a.k) ?? 0, col = a.ph==="d"?"var(--digi)":"var(--phys)";
+    return `<div class="ax"><span>${a.name}</span><span class="bar"><i style="width:${v}%;background:${col}"></i></span><span class="v">${mine(a.k) ? `<span class="mono">${S.scores[a.k]}</span> <span class="src">${srcLab(a.k)}</span>` : `<span class="src">не пройден</span>`}</span>${axDetail(a.k)?`<span class="axd">${axDetail(a.k)}</span>`:""}</div>`;
+  }).join("");
+  const anyYou = AX.some(a=>mine(a.k)), allYou = AX.every(a=>mine(a.k));
+  $("#bannerText").textContent = allYou ? "Карта построена по всем шести показателям." :
+    anyYou ? `Заполнено показателей: ${AX.filter(a=>mine(a.k)).length} из 6. Пройдите оставшиеся тесты, чтобы карта была полной.` :
+    "Карта пока пустая. Пройдите тесты цифровой фазы и проанализируйте видео приседаний, и здесь появятся ваши показатели.";
+  $("#resetBtn").hidden = !anyYou;
+  $("#insight").textContent = insightText();
+}
+function axDetail(k){
+  const R = S.raw, q = R.squat;
+  if (!mine(k)) return "";
+  if (k==="react" && R.react) return `медиана ${R.react.ms} мс`;
+  if (k==="aim" && R.aim) return `${R.aim.hits} попаданий, точность ${R.aim.acc}%`;
+  if (k==="decide" && R.decide) return `${R.decide.acc}% верно, ${R.decide.rt} мс`;
+  if (!q) return "";
+  if (k==="power") return q.n ? `${q.n} повт. за ${q.dur} с = ${q.rpm} в минуту` : (q.manual!=null ? `${q.manual} приседаний за 30 с` : "");
+  if (k==="tech" && q.n) return `глубина ${q.minAvg}°, наклон до ${q.leanMax}°, чистых ${q.clean} из ${q.n}`;
+  if (k==="rhythm" && q.n) return `${q.tempo} с на повторение, разброс ${q.cv}%`;
+  return "";
+}
+function renderDigital(){
+  const R = S.raw, box = $("#digSum");
+  const done = ["react","aim","decide"].filter(k=>R[k] && S.src[k]);
+  if (!done.length){ box.hidden = true; return; }
+  box.hidden = false;
+  $("#dgDone").textContent = `Пройдено тестов: ${done.length} из 3`;
+  const chip = k => `<span class="chip d">${AX.find(a=>a.k===k).name} · ${S.scores[k]}</span>`;
+  const pend = name => `<tr class="grp"><td colspan="4">${name}: тест ещё не пройден</td></tr>`;
+  let h = "";
+  if (done.includes("react")){ const r = R.react;
+    h += `<tr class="grp"><td colspan="4">Реакция</td></tr>`;
+    if (r.tries) h += `<tr><td>Время по попыткам</td><td class="val">${r.tries.join(" · ")} мс</td><td class="muted">берётся медиана, чтобы одна случайная попытка не портила итог</td><td></td></tr>`;
+    if (r.best!=null) h += `<tr><td>Лучшая / худшая попытка</td><td class="val">${r.best} / ${r.worst} мс</td><td></td><td></td></tr>`;
+    h += `<tr><td>Медиана реакции</td><td class="val">${r.ms} мс</td><td class="muted">450 мс = 0 баллов, 200 мс и быстрее = 100</td><td class="to">${chip("react")}</td></tr>`;
+  } else h += pend("Реакция");
+  if (done.includes("aim")){ const a = R.aim, hs = r0(clamp(a.hits/30*100));
+    h += `<tr class="grp"><td colspan="4">Точность</td></tr>`;
+    h += `<tr><td>Попаданий за 20 секунд</td><td class="val">${a.hits}</td><td class="muted">30 попаданий = 100 → ${hs} баллов, вес 70%</td><td></td></tr>`;
+    h += `<tr><td>Промахов</td><td class="val">${a.miss}</td><td></td><td></td></tr>`;
+    h += `<tr><td>Точность кликов</td><td class="val">${a.acc}%</td><td class="muted">процент попаданий от всех кликов, вес 30%</td><td class="to">${chip("aim")}</td></tr>`;
+  } else h += pend("Точность");
+  if (done.includes("decide")){ const d = R.decide, sp = r0(clamp((650-d.rt)/300*100));
+    h += `<tr class="grp"><td colspan="4">Решения</td></tr>`;
+    if (d.nGo!=null){
+      h += `<tr><td>Сигналы «ЖМИ»: нажато вовремя</td><td class="val">${d.hit} из ${d.nGo}</td><td class="muted">пропусков: ${d.miss}</td><td></td></tr>`;
+      h += `<tr><td>Сигналы «СТОП»: удержался</td><td class="val">${d.cr} из ${d.nNo}</td><td class="muted">ложных нажатий: ${d.fa}</td><td></td></tr>`;
+    }
+    h += `<tr><td>Доля верных решений</td><td class="val">${d.acc}%</td><td class="muted">вес 80%</td><td></td></tr>`;
+    h += `<tr><td>Среднее время нажатия</td><td class="val">${d.rt} мс</td><td class="muted">650 мс = 0, 350 мс = 100 → ${sp} баллов, вес 20%</td><td class="to">${chip("decide")}</td></tr>`;
+  } else h += pend("Решения");
+  $("#dgBody").innerHTML = h;
+  const ws = weakest(2), inPlan = ws.filter(a=>a.ph==="d");
+  $("#dgFlow").innerHTML = `
+    <div class="step"><span class="k">→ В карту</span><span>Реакция ${fmt(sc("react"))}, Точность ${fmt(sc("aim"))}, Решения ${fmt(sc("decide"))}. Цифровая фаза в среднем: <b>${fmt(phaseAvg("d"))}</b>.</span><a href="#map">Открыть карту</a></div>
+    <div class="step"><span class="k">→ В план</span><span>${inPlan.length ? `В фокус недели попали: ${inPlan.map(a=>`«${a.name}» (${S.scores[a.k]})`).join(" и ")}. Под это подобраны игровые и физические задания.` : `Цифровые показатели не самые слабые, поэтому фокус недели на физической фазе: ${ws.map(a=>`«${a.name}»`).join(" и ")}.`}</span><a href="#plan">Открыть план</a></div>`;
+}
+function renderSquat(){
+  const q = S.raw.squat, box = $("#squatSum");
+  if (!q || !q.n || !q.reps){ box.hidden = true; return; }
+  box.hidden = false;
+  $("#sqSrc").textContent = q.src==="camera" ? "Источник: камера" : "Источник: видео";
+  const rows = [
+    ["Повторений", `${q.n}`, "вместе с длительностью даёт темп", ""],
+    ["Длительность подхода", `${q.dur} с`, "", ""],
+    ["Темп", `${q.rpm} / мин`, "Объём = темп ÷ 28 повт/мин × 100", `Объём · ${S.scores.power}`],
+    ["Средняя глубина (мин. угол колена)", `${q.minAvg}°`, `150° = 0 баллов, 90° и ниже = 100 → ${q.depthScore} баллов, вес 60%`, ""],
+    ["Наклон корпуса (средний / макс.)", `${q.leanAvg}° / ${q.leanMax}°`, `до 35° = 100 баллов, 65° = 0 → ${q.leanScore} баллов, вес 40%`, `Техника · ${S.scores.tech}`],
+    ["Чистых повторений", `${q.clean} из ${q.n}`, "без замечаний по глубине, наклону и скорости", ""],
+    ["Время одного повторения", `${q.tempo} с`, "", ""],
+    ["Разброс времени", `${q.cv}%`, "Ритм: 5% = 100 баллов, 45% = 0", `Ритм · ${S.scores.rhythm}`],
+  ];
+  $("#sqBody").innerHTML = rows.map(r=>`<tr><td>${r[0]}</td><td class="val">${r[1]}</td><td class="muted">${r[2]}</td><td class="to">${r[3]?`<span class="chip p">${r[3]}</span>`:""}</td></tr>`).join("");
+  const ws = weakest(2), inPlan = ws.filter(a=>a.ph==="p");
+  $("#sqFlow").innerHTML = `
+    <div class="step"><span class="k">→ В карту</span><span>Объём ${S.scores.power}, Техника ${S.scores.tech}, Ритм ${S.scores.rhythm}. Физическая фаза в среднем: <b>${fmt(phaseAvg("p"))}</b>.</span><a href="#map">Открыть карту</a></div>
+    <div class="step"><span class="k">→ В план</span><span>${inPlan.length ? `В фокус недели попали: ${inPlan.map(a=>`«${a.name}» (${S.scores[a.k]})`).join(" и ")}. Под это подобраны физические задания.` : `Физические показатели не самые слабые, поэтому фокус недели на цифровой фазе: ${ws.map(a=>`«${a.name}»`).join(" и ")}.`}</span><a href="#plan">Открыть план</a></div>`;
+  $("#sqReps").innerHTML = q.reps.map((r,i)=>{ const notes = repNotes(r); return `<tr><td class="mono">${i+1}</td><td class="val">${r.min}°</td><td class="val">${r.lean}°</td><td class="val">${r.dur} с</td><td>${notes.length?notes.join("; "):"чисто"} · <span class="mono">${r0(repQuality(r))}</span></td></tr>`; }).join("");
+}
+function weakest(n){ return AX.filter(a=>mine(a.k)).sort((a,b)=>S.scores[a.k]-S.scores[b.k]).slice(0,n); }
+function insightText(){
+  const d = phaseAvg("d"), p = phaseAvg("p"), w = weakest(1)[0];
+  if (!w) return "Здесь появится вывод: какая фаза у вас слабее и с чего начать тренировки.";
+  if (d==null || p==null){ const has = d==null ? "физической" : "цифровой", miss = d==null ? "цифровой" : "физической";
+    return `Пока есть данные только по ${has} фазе (${d??p}). Пройдите тесты ${miss} фазы, чтобы сравнить фазы между собой. Самый слабый показатель сейчас: «${w.name.toLowerCase()}» (${S.scores[w.k]}).`; }
+  let t;
+  if (Math.abs(d-p) < 8) t = `Фазы сбалансированы (${d} и ${p}). Главный резерв: «${w.name.toLowerCase()}» (${S.scores[w.k]}).`;
+  else {
+    const weakPh = d < p ? "цифровая" : "физическая";
+    t = `Лимитирующая фаза: ${weakPh} (${Math.min(d,p)} против ${Math.max(d,p)}). В фиджитал-матче очки команды складываются из обеих фаз, поэтому подтянуть слабую выгоднее, чем усиливать сильную. Начать стоит с показателя «${w.name.toLowerCase()}» (${S.scores[w.k]}).`;
+  }
+  return t;
+}
+
+/* ---------- plan ---------- */
+const LIB = {
+  react:{d:"Тренажёр реакции: 5 серий по 10 сигналов, отдых 1 мин", p:"Старты по сигналу: 8 × 10 м, старт на хлопок партнёра", m:40},
+  aim:{d:"Aim-тренировка: 3 × 5 мин, сначала точность, потом скорость", p:"Удары или броски в цель: 5 × 10, считать попадания", m:45},
+  decide:{d:"Разбор двух своих матчей: стоп-кадр и выбор лучшего решения", p:"Игра 3 × 3 на малой площадке, не больше двух касаний", m:50},
+  power:{d:"Короткая игровая сессия 20 мин после физической нагрузки", p:"Приседания 4 × 15, выпады 3 × 10 на каждую ногу", m:45},
+  tech:{d:"Видео-разбор своих приседаний в ФиджиКоуче", p:"Присед у стены с паузой внизу 3 × 8, затем 2 × 10 под видео сбоку", m:35},
+  rhythm:{d:"Серии игровых действий под таймер: 6 × 1 мин", p:"Приседания под метроном 60 уд/мин, 3 × 20", m:35},
+};
+function renderPlan(){
+  const ws = weakest(2);
+  if (!ws.length){ $("#focus").innerHTML = `<span class="muted">Фокус недели появится после первого теста.</span>`; $("#planWhy").textContent = ""; $("#planBody").innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center;padding:28px">План строится по вашим результатам. Пройдите хотя бы один тест цифровой или физической фазы.</td></tr>`; return; }
+  const w1 = ws[0], w2 = ws[1] || ws[0];
+  $("#focus").innerHTML = `<span class="muted">Фокус недели:</span>` + ws.map(a=>`<span class="chip ${a.ph}">${a.name} · ${S.scores[a.k]}</span>`).join("");
+  $("#planWhy").innerHTML = (ws.length>1 ? "Почему так: это два самых низких показателя на карте. " : "Почему так: пока заполнен один показатель, план строится по нему. ") + ws.map(a=>{ const d = axDetail(a.k); return `<b>${a.name} ${S.scores[a.k]}</b> (${srcLab(a.k)}${d?": "+d:""})`; }).join(", ") + ". Задания на них стоят в понедельник, вторник, четверг и пятницу." + (AX.some(a=>!mine(a.k)) ? " Пройдите остальные тесты, и план уточнится." : "");
+  const L1 = LIB[w1.k], L2 = LIB[w2.k];
+  const rows = [
+    ["Пн", ["d",L1.d], ["p",L1.p], L1.m],
+    ["Вт", ["d",L2.d], ["p",L2.p], L2.m],
+    ["Ср", ["d","Свободная игра 30 мин без задач на результат"], ["p","Кардио в лёгком темпе 25 мин, растяжка"], 55],
+    ["Чт", ["d",L1.d], ["p",L1.p], L1.m],
+    ["Пт", ["d",L2.d], ["p",L2.p], L2.m],
+    ["Сб", ["d","Контрольный фиджитал-матч: цифровая фаза"], ["p","Сразу после: физическая фаза. Вечером повторить тесты в ФиджиКоуче"], 90],
+    ["Вс", ["n","Отдых"], ["n","Восстановление: прогулка, сон 8 часов"], 0],
+  ];
+  const lab = {d:"Цифра", p:"Физика", n:"Отдых"};
+  $("#planBody").innerHTML = rows.map(r=>`<tr><td class="day">${r[0]}</td>${[r[1],r[2]].map(c=>`<td><div class="task ${c[0]}"><span class="k">${lab[c[0]]}</span><span>${c[1]}</span></div></td>`).join("")}<td class="mono">${r[3]?r[3]+" мин":"—"}</td></tr>`).join("");
+}
+
+function renderTestResults(){
+  const R = S.raw;
+  $("#r-react").textContent = R.react ? `${R.react.ms} мс · ${S.scores.react}` : "";
+  $("#r-aim").textContent = R.aim ? `${R.aim.hits} попад. · ${R.aim.miss} пром. · ${S.scores.aim}` : "";
+  $("#r-decide").textContent = R.decide ? `${R.decide.acc}% верно · ${S.scores.decide}` : "";
+}
+function renderAll(){ renderRadarOrdered(); renderScores(); renderPlan(); renderTestResults(); renderSquat(); renderDigital(); }
+
+$("#resetBtn").addEventListener("click", ()=>{ S = {scores:{}, src:{}, raw:{}}; save(); renderAll(); });
+
+/* ---------- digital tests ---------- */
+const arena = $("#arena");
+let current = "react", T = {}; // test runtime
+const INTRO = {
+  react:["Тест реакции","Когда фон станет синим, как можно быстрее нажмите на поле. Нажатие раньше сигнала считается фальстартом."],
+  aim:["Тест точности","За 20 секунд попадите в как можно большее число целей. Промахи снижают оценку."],
+  decide:["Тест решений","Синий круг «ЖМИ»: нажмите на поле. Оранжевый квадрат «СТОП»: ничего не делайте."],
+};
+function stopAll(){ (T.timers||[]).forEach(clearTimeout); clearInterval(T.iv); T = {}; arena.className = ""; }
+function showIntro(k, extra){
+  stopAll(); current = k;
+  document.querySelectorAll(".tbtn").forEach(b=>b.setAttribute("aria-pressed", b.dataset.test===k ? "true":"false"));
+  const [t,d] = INTRO[k];
+  arena.innerHTML = `<div class="msg"><strong>${t}</strong><p>${d}</p>${extra?`<p class="mono" style="color:var(--digi)">${extra}</p>`:""}<button class="btn d" type="button" id="startT">${extra?"Пройти ещё раз":"Начать"}</button></div>`;
+  $("#startT").addEventListener("click", e=>{ e.stopPropagation(); ({react:startReact, aim:startAim, decide:startDecide})[k](); });
+}
+document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click", ()=>showIntro(b.dataset.test)));
+function later(fn, ms){ const id = setTimeout(fn, ms); (T.timers = T.timers||[]).push(id); return id; }
+function hud(l, r){ return `<div class="hud"><span>${l}</span><span>${r}</span></div>`; }
+
+/* reaction */
+function startReact(){ stopAll(); T = {kind:"react", tries:[], timers:[]}; nextReact(); }
+function nextReact(){
+  T.state = "wait"; arena.className = "";
+  arena.innerHTML = hud(`Попытка ${T.tries.length+1} из 5`, "") + `<div class="msg"><strong>Ждите сигнал…</strong></div>`;
+  later(()=>{ T.state="go"; T.t0=performance.now(); arena.className="go"; arena.innerHTML = hud(`Попытка ${T.tries.length+1} из 5`,"") + `<div class="msg"><strong>ЖМИ!</strong></div>`; }, 1200 + Math.random()*2300);
+}
+/* aim */
+function startAim(){
+  stopAll(); T = {kind:"aim", hits:0, miss:0, end:performance.now()+20000, timers:[]};
+  arena.innerHTML = hud("Попадания: 0 · Промахи: 0", "20.0 с");
+  spawnTarget();
+  T.iv = setInterval(()=>{
+    const left = Math.max(0,(T.end-performance.now())/1000);
+    const h = arena.querySelector(".hud span:last-child"); if (h) h.textContent = left.toFixed(1)+" с";
+    if (left<=0) finishAim();
+  }, 100);
+}
+function spawnTarget(){
+  arena.querySelectorAll(".target").forEach(t=>t.remove());
+  const w = arena.clientWidth, h = arena.clientHeight;
+  const b = document.createElement("button"); b.type="button"; b.className="target"; b.setAttribute("aria-label","Цель");
+  b.style.left = (40 + Math.random()*(w-80))+"px"; b.style.top = (56 + Math.random()*(h-96))+"px";
+  b.addEventListener("pointerdown", e=>{ e.stopPropagation(); e.preventDefault(); if(T.kind!=="aim")return; T.hits++; aimHud(); spawnTarget(); });
+  arena.appendChild(b);
+}
+function aimHud(){ const h = arena.querySelector(".hud span"); if (h) h.innerHTML = `Попадания: <b>${T.hits}</b> · Промахи: <b style="color:var(--phys)">${T.miss}</b>`; }
+function finishAim(){
+  const hits=T.hits, miss=T.miss; clearInterval(T.iv);
+  const acc = hits+miss ? hits/(hits+miss) : 0;
+  const score = clamp(hits/30*100)*0.7 + acc*30;
+  stopAll(); setScore("aim", score, {hits, miss, acc:r0(acc*100)});
+  showIntro("aim", `Попаданий: ${hits}, промахов: ${miss}, точность ${r0(acc*100)}% → оценка ${S.scores.aim}`);
+}
+/* go / no-go */
+function startDecide(){
+  stopAll();
+  const seq = []; for(let i=0;i<24;i++) seq.push(i<17?"go":"no");
+  for(let i=seq.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [seq[i],seq[j]]=[seq[j],seq[i]]; }
+  T = {kind:"decide", seq, i:-1, hit:0, miss:0, fa:0, cr:0, rts:[], timers:[]};
+  nextDecide();
+}
+function nextDecide(){
+  T.i++; T.state="blank";
+  if (T.i >= T.seq.length) return finishDecide();
+  arena.innerHTML = hud(`${T.i+1} / ${T.seq.length}`, "") ;
+  later(()=>{
+    const s = T.seq[T.i]; T.state = s; T.t0 = performance.now(); T.resp = false;
+    arena.innerHTML = hud(`${T.i+1} / ${T.seq.length}`, "") + `<div class="stim ${s==="go"?"go":"no"}">${s==="go"?"ЖМИ":"СТОП"}</div>`;
+    later(()=>{ if(!T.resp){ if(s==="go") T.miss++; else T.cr++; } nextDecide(); }, 750);
+  }, 450 + Math.random()*450);
+}
+function finishDecide(){
+  const total = T.seq.length, correct = T.hit + T.cr;
+  const rt = T.rts.length ? T.rts.reduce((a,b)=>a+b,0)/T.rts.length : 700;
+  const acc = correct/total;
+  const score = acc*80 + clamp((650-rt)/300*100)*0.2;
+  const raw = {acc:r0(acc*100), rt:r0(rt), fa:T.fa, miss:T.miss, hit:T.hit, cr:T.cr, nGo:T.seq.filter(x=>x==="go").length, nNo:T.seq.filter(x=>x==="no").length};
+  stopAll(); setScore("decide", score, raw);
+  showIntro("decide", `Верно: ${raw.acc}%, ложных нажатий: ${raw.fa}, пропусков: ${raw.miss}, среднее время ${raw.rt} мс → оценка ${S.scores.decide}`);
+}
+arena.addEventListener("pointerdown", e=>{
+  if (e.target.closest("button")) return;
+  if (T.kind==="react"){
+    if (T.state==="wait"){
+      (T.timers||[]).forEach(clearTimeout); T.timers=[]; T.state="false"; arena.className="false";
+      arena.innerHTML = hud(`Попытка ${T.tries.length+1} из 5`,"") + `<div class="msg"><strong>Фальстарт</strong><p>Дождитесь синего фона. Повторяем попытку.</p></div>`;
+      later(nextReact, 1100);
+    } else if (T.state==="go"){
+      const ms = performance.now()-T.t0; T.tries.push(ms); T.state="done";
+      arena.className = "";
+      arena.innerHTML = hud(`Попытка ${T.tries.length} из 5`,"") + `<div class="msg"><strong class="mono">${r0(ms)} мс</strong></div>`;
+      if (T.tries.length<5) later(nextReact, 800);
+      else {
+        const sorted=[...T.tries].sort((a,b)=>a-b), med = sorted[2];
+        const score = (450-med)/250*100;
+        const ms2 = r0(med), tries = T.tries.map(r0); stopAll(); setScore("react", score, {ms:ms2, tries, best:Math.min(...tries), worst:Math.max(...tries)});
+        showIntro("react", `Медиана реакции: ${ms2} мс → оценка ${S.scores.react}`);
+      }
+    }
+  } else if (T.kind==="aim"){ T.miss++; aimHud();
+    const r = arena.getBoundingClientRect(), m = document.createElement("span"); m.className = "missmark"; m.textContent = "✕";
+    m.style.left = (e.clientX - r.left)+"px"; m.style.top = (e.clientY - r.top)+"px"; arena.appendChild(m); setTimeout(()=>m.remove(), 600); }
+  else if (T.kind==="decide"){
+    if (T.state==="go" && !T.resp){ T.resp=true; T.hit++; T.rts.push(performance.now()-T.t0); arena.querySelector(".stim")?.style.setProperty("opacity",".45"); }
+    else if (T.state==="no" && !T.resp){ T.resp=true; T.fa++; arena.querySelector(".stim")?.style.setProperty("opacity",".45"); }
+  }
+});
+
+/* ---------- physical: pose analysis ---------- */
+const CDN = "https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/";
+let posePromise = null, poseObj = null;
+const cv = $("#cv"), ctx = cv.getContext("2d");
+const video = document.createElement("video"); video.muted = true; video.playsInline = true; video.setAttribute("playsinline","");
+const pstatus = $("#pstatus");
+function status(t, err){ pstatus.textContent = t; pstatus.classList.toggle("err", !!err); }
+
+function loadPose(){
+  if (posePromise) return posePromise;
+  posePromise = new Promise((res, rej)=>{
+    if (window.Pose) return res();
+    const s = document.createElement("script"); s.src = CDN+"pose.js"; s.crossOrigin = "anonymous";
+    s.onload = ()=>res(); s.onerror = ()=>rej(new Error("Не удалось загрузить библиотеку распознавания позы"));
+    document.head.appendChild(s);
+  }).then(async ()=>{
+    const p = new window.Pose({locateFile: f => CDN+f});
+    p.setOptions({modelComplexity:0, smoothLandmarks:true, enableSegmentation:false, minDetectionConfidence:0.5, minTrackingConfidence:0.5});
+    p.onResults(onResults);
+    await p.initialize();
+    poseObj = p; return p;
+  }).catch(e=>{ posePromise = null; throw e; });
+  return posePromise;
+}
+
+let A = null; // analysis state
+function resetAnalysis(){
+  A = {live:false, start:performance.now(), phase:"up", armed:false, lastUp:0, cur:null, reps:[], ema:null, leanEma:null, running:true};
+  $("#kReps").textContent = "0"; $("#kAngle").textContent = "—"; $("#kLean").textContent = "—";
+  $("#reps").innerHTML = "";
+}
+function angle(a,b,c){ // at b
+  const v1=[a.x-b.x,a.y-b.y], v2=[c.x-b.x,c.y-b.y];
+  const d = (v1[0]*v2[0]+v1[1]*v2[1]) / (Math.hypot(...v1)*Math.hypot(...v2)||1);
+  return Math.acos(Math.max(-1,Math.min(1,d)))*180/Math.PI;
+}
+const EDGES = [[11,12],[11,13],[13,15],[12,14],[14,16],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,31],[28,32],[27,29],[28,30]];
+function onResults(res){
+  if (!A) return;
+  const W = cv.width, H = cv.height;
+  ctx.drawImage(res.image, 0, 0, W, H);
+  const lm = res.poseLandmarks;
+  if (!lm){ return; }
+  const P = i => ({x:lm[i].x*W, y:lm[i].y*H, v:lm[i].visibility??1});
+  // skeleton
+  ctx.lineWidth = Math.max(3, W/240); ctx.strokeStyle = "rgba(255,132,69,.95)"; ctx.lineCap="round";
+  EDGES.forEach(([a,b])=>{ const p=P(a), q=P(b); if(p.v<.3||q.v<.3) return; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke(); });
+  const lv = lm[23].visibility+lm[25].visibility+lm[27].visibility, rv = lm[24].visibility+lm[26].visibility+lm[28].visibility;
+  const [ih,ik,ia,is] = lv>=rv ? [23,25,27,11] : [24,26,28,12];
+  const hip=P(ih), knee=P(ik), ank=P(ia), sh=P(is);
+  ctx.fillStyle = "#7891FF";
+  [hip,knee,ank,sh].forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(5,W/150),0,7); ctx.fill(); });
+  if (Math.min(hip.v,knee.v,ank.v) < .4) return;
+  let k = angle(hip,knee,ank);
+  const lean = Math.atan2(Math.abs(sh.x-hip.x), Math.abs(hip.y-sh.y))*180/Math.PI;
+  A.ema = A.ema==null ? k : A.ema*0.6 + k*0.4; k = A.ema;
+  A.leanEma = A.leanEma==null ? lean : A.leanEma*0.6 + lean*0.4;
+  const t = A.live ? (performance.now()-A.start)/1000 : video.currentTime;
+  // label
+  ctx.font = `700 ${Math.max(18,W/34)}px JetBrains Mono, monospace`; ctx.fillStyle="#fff"; ctx.strokeStyle="rgba(0,0,0,.6)"; ctx.lineWidth=4;
+  const lbl = r0(k)+"°"; ctx.strokeText(lbl, knee.x+14, knee.y-10); ctx.fillText(lbl, knee.x+14, knee.y-10);
+  $("#kAngle").textContent = r0(k)+"°"; $("#kLean").textContent = r0(A.leanEma)+"°";
+  // state machine
+  if (A.phase==="up"){
+    if (k>150){ A.armed = true; A.lastUp = t; }
+    else if (A.armed && k<115){ A.phase="down"; A.cur={min:k, lean:A.leanEma, t0:A.lastUp}; }
+  } else {
+    A.cur.min = Math.min(A.cur.min,k); A.cur.lean = Math.max(A.cur.lean, A.leanEma);
+    if (k>150){ const rep = {min:A.cur.min, lean:A.cur.lean, dur:Math.max(.2,t-A.cur.t0)}; A.reps.push(rep); A.phase="up"; A.lastUp=t; addRep(rep, A.reps.length); }
+  }
+}
+function repQuality(r){
+  const depth = clamp((150-r.min)/(150-90)*100), lean = clamp((65-r.lean)/(65-35)*100);
+  return 0.6*depth + 0.4*lean;
+}
+function repNotes(r){
+  const n = [];
+  if (r.min>108) n.push("мало глубины: опуститесь до параллели бедра с полом");
+  if (r.lean>45) n.push("сильный наклон корпуса вперёд");
+  if (r.dur<0.9) n.push("слишком быстро, контролируйте спуск");
+  return n;
+}
+function addRep(r, i){
+  $("#kReps").textContent = i;
+  const notes = repNotes(r);
+  const el = document.createElement("div"); el.className="rep";
+  el.innerHTML = `<span class="n">${i}</span><span>${notes.length?notes.join("; "):"чисто"} <span class="muted mono" style="font-size:12px">· ${r0(r.min)}° · ${r.dur.toFixed(1)} с</span></span><span class="tag ${notes.length?"fix":"ok"}">${notes.length?"поправить":"хорошо"}</span>`;
+  $("#reps").appendChild(el); el.scrollIntoView({block:"nearest"});
+}
+function finishAnalysis(){
+  if (!A || !A.running) return; A.running = false;
+  $("#stopBtn").hidden = true;
+  const reps = A.reps, n = reps.length;
+  if (!n){ status("Повторения не найдены. Проверьте, что тело видно целиком и съёмка идёт сбоку, и попробуйте другое видео.", true); return; }
+  const dur = Math.max(5, A.live ? (performance.now()-A.start)/1000 : ((video.duration && isFinite(video.duration)) ? video.duration : reps[n-1].dur*n));
+  if (A.live) stopStream();
+  const rpm = n/(dur/60);
+  const power = clamp(rpm/28*100);
+  const tech = reps.reduce((s,r)=>s+repQuality(r),0)/n;
+  const durs = reps.map(r=>r.dur), mean = durs.reduce((a,b)=>a+b,0)/n;
+  const cvar = n>1 ? Math.sqrt(durs.reduce((s,d)=>s+(d-mean)**2,0)/n)/mean : .3;
+  const rhythm = clamp((0.45-cvar)/0.4*100);
+  const minAvg = r0(reps.reduce((s,r)=>s+r.min,0)/n), leanMax = r0(Math.max(...reps.map(r=>r.lean)));
+  S.scores.power = r0(power); S.scores.tech = r0(tech); S.scores.rhythm = r0(rhythm);
+  const srcK = A.live ? "camera" : "video";
+  S.src.power = S.src.tech = S.src.rhythm = srcK;
+  const depthScore = r0(reps.reduce((s,r)=>s+clamp((150-r.min)/(150-90)*100),0)/n);
+  const leanScore = r0(reps.reduce((s,r)=>s+clamp((65-r.lean)/(65-35)*100),0)/n);
+  const leanAvg = r0(reps.reduce((s,r)=>s+r.lean,0)/n);
+  S.raw.squat = {n, dur:r0(dur), rpm:r0(rpm), minAvg, leanMax, leanAvg, tempo:+mean.toFixed(1), cv:r0(cvar*100), depthScore, leanScore, src:srcK,
+    clean: reps.filter(r=>!repNotes(r).length).length, reps: reps.map(r=>({min:r0(r.min), lean:r0(r.lean), dur:+r.dur.toFixed(1)}))};
+  save(); renderAll();
+  status(`Готово: ${n} повторений, ${r0(rpm)} в минуту, чистых ${S.raw.squat.clean} из ${n}. Ниже показано, что именно ушло в карту и план.`);
+  $("#squatSum").scrollIntoView({behavior:"smooth", block:"start"});
+}
+async function runVideo(file){
+  if (!file) return;
+  stopVideo();
+  status("Загружаю нейросеть распознавания позы…");
+  try { await loadPose(); }
+  catch(e){ status("Не удалось загрузить нейросеть: "+(e && e.message || "ошибка")+". Можно ввести число приседаний вручную ниже.", true); return; }
+  stopStream(); video.srcObject = null; video.src = URL.createObjectURL(file); $("#stopBtn").textContent = "Остановить анализ";
+  await new Promise(r=>{ video.onloadedmetadata = r; video.onerror = r; });
+  if (!video.videoWidth){ status("Это видео не открывается в браузере. Попробуйте формат MP4.", true); return; }
+  const scale = Math.min(1, 960/video.videoWidth);
+  cv.width = r0(video.videoWidth*scale); cv.height = r0(video.videoHeight*scale);
+  $("#stage").style.aspectRatio = `${cv.width} / ${cv.height}`;
+  cv.hidden = false; $("#ph").hidden = true; $("#stopBtn").hidden = false;
+  resetAnalysis();
+  status("Анализирую видео…");
+  video.playbackRate = 0.75;
+  try { await video.play(); } catch(e){ status("Не удалось воспроизвести видео.", true); return; }
+  const loop = async ()=>{
+    if (!A || !A.running) return;
+    if (video.ended){ finishAnalysis(); return; }
+    try { await poseObj.send({image: video}); } catch(e){ status("Ошибка анализа кадра: "+(e&&e.message||e), true); A.running=false; return; }
+    requestAnimationFrame(loop);
+  };
+  video.onended = ()=>setTimeout(finishAnalysis, 300);
+  loop();
+}
+function stopVideo(){ try{ video.pause(); }catch(e){} if (A && A.running){ finishAnalysis(); } }
+
+let stream = null;
+function stopStream(){ if (stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; } }
+async function runLive(){
+  stopVideo();
+  status("Загружаю нейросеть распознавания позы…");
+  try { await loadPose(); } catch(e){ status("Не удалось загрузить нейросеть. Проверьте интернет и обновите страницу.", true); return; }
+  try { stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"user", width:{ideal:960}}, audio:false}); }
+  catch(e){ status("Нет доступа к камере. Разрешите доступ в браузере или загрузите видео.", true); return; }
+  video.srcObject = stream; video.src = "";
+  await video.play().catch(()=>{});
+  await new Promise(r=>{ if (video.videoWidth) r(); else video.onloadedmetadata = r; });
+  const scale = Math.min(1, 960/video.videoWidth);
+  cv.width = r0(video.videoWidth*scale); cv.height = r0(video.videoHeight*scale);
+  $("#stage").style.aspectRatio = `${cv.width} / ${cv.height}`;
+  cv.hidden = false; $("#ph").hidden = true; $("#stopBtn").hidden = false; $("#stopBtn").textContent = "Закончить подход";
+  resetAnalysis(); A.live = true; A.start = performance.now();
+  status("Встаньте боком к камере и приседайте. Нажмите «Закончить подход», когда закончите.");
+  const loop = async ()=>{
+    if (!A || !A.running) return;
+    try { await poseObj.send({image: video}); } catch(e){ status("Ошибка анализа кадра.", true); A.running=false; stopStream(); return; }
+    requestAnimationFrame(loop);
+  };
+  loop();
+}
+$("#liveBtn").addEventListener("click", runLive);
+$("#fileIn").addEventListener("change", e=>{ runVideo(e.target.files[0]); e.target.value=""; });
+$("#camIn").addEventListener("change", e=>{ runVideo(e.target.files[0]); e.target.value=""; });
+$("#stopBtn").addEventListener("click", ()=>{ try{ video.pause(); }catch(e){} finishAnalysis(); });
+$("#manualBtn").addEventListener("click", ()=>{
+  const v = parseInt($("#manualReps").value, 10);
+  if (!(v>=0 && v<=60)){ status("Введите число от 0 до 60.", true); return; }
+  setScore("power", v*2/28*100, null, "manual"); S.raw.squat = Object.assign({}, S.raw.squat||{}, {manual:v}); save();
+  status(`Учтено: ${v} приседаний за 30 секунд. Технику и ритм можно оценить только по видео.`);
+});
+
+/* ---------- coach chat ---------- */
+const log = $("#log"); let sample = null, turns = [];
+function bubble(cls, who, text){ const d = document.createElement("div"); d.className = "msgc "+cls; d.innerHTML = `<span class="who"></span><span class="t"></span>`; d.querySelector(".who").textContent = who; d.querySelector(".t").textContent = text; log.appendChild(d); log.scrollTop = log.scrollHeight; return d.querySelector(".t"); }
+function profileText(){
+  const lines = AX.map(a=>`${a.name} (${a.ph==="d"?"цифровая":"физическая"} фаза): ${mine(a.k) ? S.scores[a.k]+"/100 ("+srcLab(a.k)+")" : "тест не пройден"}`);
+  const R = S.raw, ex = [];
+  if (R.react) ex.push(`реакция ${R.react.ms} мс`);
+  if (R.aim) ex.push(`точность: ${R.aim.hits} попаданий за 20 с, ${R.aim.acc}% точных`);
+  if (R.decide) ex.push(`решения: ${R.decide.acc}% верно, ${R.decide.fa} ложных нажатий, ${R.decide.rt} мс`);
+  if (R.squat && R.squat.n) ex.push(`приседания: ${R.squat.n} повторений, ${R.squat.rpm}/мин, средний мин. угол колена ${R.squat.minAvg}°, макс. наклон ${R.squat.leanMax}°, чистых ${R.squat.clean}`);
+  const ws = weakest(2);
+  return lines.join("\n") + (ex.length?"\nСырые данные: "+ex.join("; "):"") + `\nСредняя цифровая фаза ${fmt(phaseAvg("d"))}, физическая ${fmt(phaseAvg("p"))}. Фокус плана: ${ws.length ? ws.map(a=>a.name).join(", ") : "нет данных"}.`;
+}
+const RULES = () => `Ты ФиджиКоуч, ИИ-тренер по фиджитал-спорту (соревнования из цифровой фазы в видеоигре и физической фазы в той же дисциплине). Отвечай по-русски, дружелюбно и конкретно, до 120 слов, без markdown-заголовков. Опирайся на данные спортсмена ниже, называй цифры. Давай упражнения с объёмом. Не ставь медицинских диагнозов; при боли советуй обратиться к врачу.\n\nДанные спортсмена:\n${profileText()}`;
+function localAnswer(q){
+  const s = q.toLowerCase(), ws = weakest(2), w1 = ws[0], w2 = ws[1] || ws[0], d = phaseAvg("d"), p = phaseAvg("p");
+  if (!w1) return "У меня пока нет ваших данных. Пройдите хотя бы один тест цифровой фазы или проанализируйте видео приседаний, и я разберу результаты.";
+  if (/техник|присед|колен|спин|наклон/.test(s)){
+    const sq = S.raw.squat;
+    let t = mine("tech") ? `Техника сейчас ${S.scores.tech}/100. ` : "Технику я оценю по видео приседаний, его пока не было. ";
+    if (sq && sq.n) t += `Средний угол в нижней точке ${sq.minAvg}° (цель 90–100°), максимальный наклон корпуса ${sq.leanMax}° (лучше до 40°). `;
+    return t + "Делайте присед у стены с паузой 2 секунды внизу, 3 × 8. Вес на всей стопе, колени смотрят туда же, куда носки. Через неделю снимите новое видео сбоку и сравните.";
+  }
+  if (/совмещ|фаз|расписан|недел|план/.test(s))
+    return `Ставьте цифровую и физическую работу в один день, как на соревновании: сначала 20–30 минут игры, потом физическая часть. Так вы учитесь играть свежим и действовать после игры. Цифровая фаза у вас ${d}, физическая ${p}, поэтому ${d<p?"на игровые задания":"на физические задания"} отводите больше времени. Воскресенье оставьте для восстановления.`;
+  if (/реакц/.test(s)) return `Реакция ${mine("react")?S.scores.react+"/100":"пока не измерена"}${S.raw.react?`, медиана ${S.raw.react.ms} мс`:""}. Тренируйте короткими сериями: 5 × 10 сигналов с отдыхом минуту, не дольше 10 минут. На физической части подойдут старты по хлопку партнёра на 10 м. Высыпайтесь: недосып заметно замедляет реакцию.`;
+  if (/ритм|темп/.test(s)) return `Ритм ${mine("rhythm")?S.scores.rhythm+"/100":"пока не измерен"}: он показывает, насколько ровно по времени идут повторения. Включите метроном на 60 ударов: вниз на два удара, вверх на два. 3 × 20 приседаний через день.`;
+  return `Ваши слабые места сейчас: «${w1.name}» (${S.scores[w1.k]}) и «${w2.name}» (${S.scores[w2.k]}). С них начинается план на неделю: в понедельник и четверг «${w1.name.toLowerCase()}», во вторник и пятницу «${w2.name.toLowerCase()}». В субботу проведите контрольный матч и повторите тесты, чтобы увидеть прогресс на карте.`;
+}
+async function ask(q){
+  q = q.trim(); if (!q) return;
+  bubble("me", "Вы", q); $("#askIn").value = "";
+  const out = bubble("bot", "ФиджиКоуч", sample ? "Думаю…" : "");
+  if (!sample){ out.textContent = localAnswer(q); return; }
+  turns.push({role:"user", content:q}); if (turns.length>12) turns = turns.slice(-12);
+  $("#askBtn").disabled = true;
+  try {
+    const {text} = await sample([{role:"user", content:RULES()}, ...turns], {cache:false, modelTier:"quick", onText:({text})=>{ out.textContent = text; }});
+    turns.push({role:"assistant", content:text});
+  } catch(e){
+    turns.pop();
+    if (["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"].includes(e.code)){ sample = null; setMode(); }
+    out.textContent = (e.text ? e.text+"\n\n" : "") + localAnswer(q);
+  } finally { $("#askBtn").disabled = false; }
+}
+function setMode(){ $("#mode").textContent = sample ? "Ответы генерирует ИИ (Claude) с учётом вашей карты. Первый вопрос попросит разрешение." : "Базовый режим: ответы строятся по правилам из ваших показателей. "; }
+$("#askForm").addEventListener("submit", e=>{ e.preventDefault(); ask($("#askIn").value); });
+$("#quick").addEventListener("click", e=>{ const b = e.target.closest("button"); if (b) ask(b.textContent); });
+bubble("bot","ФиджиКоуч","Привет! Я ваш тренер по фиджитал-спорту. Пройдите тесты двух фаз, и я разберу ваши результаты и отвечу на вопросы по ним.");
+
+
+/* nav highlight */
+(function(){ const links = [...document.querySelectorAll("nav.steps a")]; const map = new Map(links.map(a=>[a.getAttribute("href").slice(1), a]));
+  if (!("IntersectionObserver" in window)) return;
+  const io = new IntersectionObserver(es=>{ es.forEach(e=>{ if (e.isIntersecting){ links.forEach(l=>l.classList.remove("on")); map.get(e.target.id)?.classList.add("on"); } }); }, {rootMargin:"-45% 0px -50% 0px"});
+  map.forEach((_,id)=>{ const el = document.getElementById(id); if (el) io.observe(el); });
+})();
+/* ---------- boot ---------- */
+renderAll(); showIntro("react");
+setMode();
+(async ()=>{ try { if (window.claude && window.claude.use) { sample = await window.claude.use("sample"); } } catch(e){ sample = null; } setMode(); })();
+})();
+</script>
+
+</body>
+</html>

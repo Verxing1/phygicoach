@@ -6,7 +6,7 @@
 <meta name="description" content="ФиджиКоуч — ИИ-тренер для фиджитал-спортсмена">
 <title>ФиджиКоуч</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* Layout: summary first (карта спортсмена), then the two phases side-coded blue/orange, then plan and coach chat. */
 :root{
@@ -310,33 +310,142 @@ footer{background:var(--night);border-top:none}
 footer .wrap{color:#93A3BD;padding-block:36px;gap:8px}
 .f-brand{font-family:var(--f-display);font-weight:700;font-size:22px;margin-bottom:6px}
 .f-brand .d{color:var(--digiN)} .f-brand .p{color:var(--physN)}
+
+/* ===== broadcast skin: match-night TV graphics ===== */
+:root:not(#_){
+  --bg:#080C14; --surface:#101826; --ink:#EEF2F7; --muted:#93A1B5; --line:#223047;
+  --digi:#4F7BFF; --digi-soft:#152040; --phys:#FF6A1F; --phys-soft:#33190C;
+  --good:#3DD68C; --warn:#F2B544; --bad:#FF5A5F; --live:#FF3B4E;
+  --f-display:"Oswald","Golos Text",Arial,sans-serif; --r:8px;
+  --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 18px 40px -24px rgba(0,0,0,.8);
+  color-scheme:dark }
+body{background:radial-gradient(1200px 600px at 85% -10%,rgba(79,123,255,.10),transparent 60%),var(--bg);background-attachment:fixed}
+body::before{background:#05080E}
+h1,h2,h3{font-family:var(--f-display)}
+h2{text-transform:uppercase;font-weight:700;letter-spacing:.01em;font-size:clamp(32px,4.4vw,52px);line-height:1;transform:skewX(-7deg);transform-origin:left bottom}
+h3{font-weight:600;letter-spacing:.02em}
+.eyebrow{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.16em}
+
+/* hero */
+.hero.bc{background:
+  repeating-linear-gradient(115deg,transparent 0 26px,rgba(255,255,255,.018) 26px 27px),
+  radial-gradient(900px 480px at 82% 10%,rgba(79,123,255,.22),transparent 62%),
+  radial-gradient(800px 420px at 8% 110%,rgba(255,106,31,.18),transparent 60%),#05080E;
+  border-bottom:1px solid var(--line)}
+.hero.bc .hero-in{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:44px;padding-block:52px 44px;align-items:center}
+.livebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.live{display:inline-flex;align-items:center;gap:8px;background:var(--live);color:#fff;font:700 13px/1 var(--f-display);letter-spacing:.14em;padding:6px 14px 6px 12px;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.live i{width:7px;height:7px;border-radius:50%;background:#fff;display:block}
+@media (prefers-reduced-motion:no-preference){.live i{animation:blink 1.4s ease-in-out infinite}@keyframes blink{50%{opacity:.25}}}
+.hero.bc .kicker{font-family:var(--f-display);font-weight:500;font-size:15px;letter-spacing:.16em;color:#D5DEEA}
+.hero.bc h1{font-family:var(--f-display);font-weight:700;text-transform:uppercase;font-size:clamp(52px,7.4vw,116px);line-height:.88;letter-spacing:0;transform:skewX(-8deg);transform-origin:left bottom;text-shadow:none;white-space:nowrap}
+.hero.bc h1 .d{color:#7E9BFF} .hero.bc h1 .p{color:#FF7A33}
+.hero.bc .lead{font-size:17.5px;color:#D3DCE8;max-width:50ch}
+.btn{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:4px}
+.btn.big{font-size:16px;padding:15px 30px;border-radius:0;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+.btn.d{background:var(--digi);box-shadow:none}
+.btn.p{background:var(--phys)}
+.btn.ghost-dark{background:rgba(255,255,255,.09);border:none;color:#EEF2F7}
+.btn.ghost{border-color:var(--line);color:var(--ink);background:rgba(255,255,255,.03)}
+.hero-side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.bug{background:#0C1320;border:1px solid #273652;border-radius:6px;overflow:hidden;box-shadow:0 24px 50px -24px rgba(0,0,0,.9)}
+.bug-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#172238;padding:8px 14px;font:500 13px/1.3 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:#AEBBD0}
+#bugState{color:var(--good)}
+.bug-row{display:grid;grid-template-columns:1fr auto auto auto 1fr;align-items:center;padding:14px 0}
+.team{font:600 clamp(15px,1.6vw,20px)/1 var(--f-display);text-transform:uppercase;letter-spacing:.08em;color:#fff;padding:12px 18px;justify-self:stretch;text-align:center}
+.team.d{background:var(--digi);clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+.team.p{background:var(--phys);clip-path:polygon(12px 0,100% 0,100% 100%,0 100%)}
+.score{font:700 clamp(40px,5vw,64px)/1 var(--f-display);font-variant-numeric:tabular-nums;color:#fff;padding:0 16px;min-width:2.2ch;text-align:center}
+.sep{font:700 34px/1 var(--f-display);color:#55647D}
+.bug-bar{display:flex;height:6px;background:#1A2436}
+.bug-bar i{display:block;height:100%;transition:width .6s}
+.bug-bar i.d{background:var(--digi)} .bug-bar i.p{background:var(--phys)}
+.cam{position:relative;background:#0A101B;border:1px solid #1E2A40;border-radius:6px;padding:34px 18px 14px;display:flex;justify-content:center;
+  background-image:linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2);
+  background-repeat:no-repeat;background-size:22px 2px,2px 22px,22px 2px,2px 22px,22px 2px,2px 22px,22px 2px,2px 22px;
+  background-position:10px 10px,10px 10px,calc(100% - 10px) 10px,calc(100% - 10px) 10px,10px calc(100% - 10px),10px calc(100% - 10px),calc(100% - 10px) calc(100% - 10px),calc(100% - 10px) calc(100% - 10px)}
+.cam svg{width:min(100%,300px);height:auto;display:block}
+.rec{position:absolute;top:12px;left:42px;display:flex;align-items:center;gap:7px;font:500 12px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:#C9D3E2}
+.rec i{width:8px;height:8px;border-radius:50%;background:var(--live);display:block}
+.ticker{border-top:1px solid var(--line);background:#0B111C;overflow:hidden;white-space:nowrap}
+.tk-in{display:inline-flex;gap:38px;padding:12px 0;font:600 15px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:#C9D3E2}
+.tk-in span{display:inline-flex;align-items:center;gap:12px}
+.tk-in b{width:10px;height:10px;display:block;clip-path:polygon(30% 0,100% 0,70% 100%,0 100%)}
+.tk-in b.d{background:var(--digi)} .tk-in b.p{background:var(--phys)}
+@media (prefers-reduced-motion:no-preference){.tk-in{animation:tick 48s linear infinite}@keyframes tick{to{transform:translateX(-50%)}}}
+@media (max-width:860px){.hero.bc .hero-in{grid-template-columns:minmax(0,1fr);padding-block:30px 30px}.cam{display:none}}
+
+/* nav as a scoreboard strip */
+nav.steps{background:rgba(5,8,14,.92);border-bottom:1px solid var(--line)}
+nav.steps .wrap{gap:0;padding-block:0}
+nav.steps a{border-radius:0;padding:15px 18px;color:#AEBBD0;font-family:var(--f-display);font-weight:500;font-size:15px;letter-spacing:.08em;text-transform:uppercase;border:none;border-bottom:3px solid transparent;border-right:1px solid var(--line)}
+nav.steps a:first-child{border-left:1px solid var(--line)}
+nav.steps a b{font-family:var(--f-display);color:#5F6E86;font-size:14px}
+nav.steps a:hover{background:rgba(255,255,255,.04);color:#fff}
+nav.steps a.on,nav.steps a.d.on,nav.steps a.p.on{background:rgba(255,255,255,.05);color:#fff;border-bottom-color:var(--ink)}
+nav.steps a.d.on{border-bottom-color:var(--digi)} nav.steps a.p.on{border-bottom-color:var(--phys)}
+
+/* section heads as lower-thirds */
+.sechead{grid-template-columns:auto minmax(0,1fr);gap:18px}
+.stnum{-webkit-text-stroke:0;color:#fff;font:700 30px/1 var(--f-display);letter-spacing:.02em;padding:10px 18px 10px 14px;background:var(--ink);color:var(--bg);clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%);margin-top:4px}
+.stnum.d{background:var(--digi);color:#fff} .stnum.p{background:var(--phys);color:#fff} .stnum.n{background:#E7ECF3;color:#0A0F17}
+@media (max-width:520px){.sechead{grid-template-columns:minmax(0,1fr);gap:10px}.stnum{font-size:24px;justify-self:start}}
+
+/* surfaces */
+.panel,.banner,.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.panel{box-shadow:var(--shadow)}
+.tablewrap.flat{background:transparent;border:none}
+th{font-family:var(--f-display);font-weight:500;font-size:13px;letter-spacing:.12em;color:#8E9CB2;background:rgba(255,255,255,.02)}
+tr.grp td{font-family:var(--f-display);font-weight:600;letter-spacing:.1em;background:rgba(255,255,255,.035)}
+.chip{border-radius:3px;font-family:var(--f-display);font-weight:500;letter-spacing:.06em;text-transform:uppercase;font-size:12.5px}
+.tbtn{border-radius:var(--r);font-family:var(--f-display);font-weight:600;font-size:19px;letter-spacing:.06em;text-transform:uppercase;background:var(--surface);border-color:var(--line)}
+.tbtn small{text-transform:none;letter-spacing:0}
+.tbtn .res{text-transform:none}
+.tbtn[aria-pressed="true"]{background:var(--digi);border-color:var(--digi)}
+#arena{border-radius:10px;border-color:#24345A}
+#arena .msg strong{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;font-size:34px}
+#arena.go .msg strong{font-size:72px}
+.stage{border-radius:10px}
+.kpi{border-radius:6px}
+.kpi .num,.ps .big{font-family:var(--f-display);font-weight:700}
+.kpi .lab,.ps .lab{font-family:var(--f-display);font-weight:500;letter-spacing:.1em;text-transform:uppercase;font-size:13px}
+.ps{border-radius:6px}
+.ps .big{font-size:60px;line-height:1}
+.ax .v .mono{font-family:var(--f-display);font-weight:600;font-size:17px}
+.bar{background:#1A2436}
+.radarbox{background:radial-gradient(circle at 50% 50%,#121C2C 50%,var(--surface))}
+td.day{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.msgc.bot{background:#152034;border:1px solid var(--line);box-shadow:none}
+.msgc .who{font-family:var(--f-display);letter-spacing:.12em}
+form.ask input{background:#0C1320;border-color:var(--line)}
+.quick button{background:transparent;border-color:var(--line);color:#C9D3E2}
+footer{background:#05080E;border-top:1px solid var(--line)}
+.f-brand{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;font-size:24px}
 </style>
 </head>
 <body>
 
 
-<header class="hero">
-  <div class="hero-bg" aria-hidden="true"><div class="hb-d"></div><div class="hb-p"></div></div>
+<header class="hero bc">
   <div class="wrap hero-in">
     <div class="hero-txt">
-      <div class="brand">
-        <svg class="logo" viewBox="0 0 40 40" aria-hidden="true"><rect x="2" y="2" width="17" height="36" rx="5" fill="#5B7BFF"/><rect x="21" y="2" width="17" height="36" rx="5" fill="#FF7A33"/><circle cx="20" cy="20" r="7" fill="#0B1220"/><circle cx="20" cy="20" r="3" fill="#F3F6FA"/></svg>
-        <span class="kicker">ИИ-тренер для фиджитал-спорта</span>
-      </div>
+      <div class="livebar"><span class="live"><i></i>LIVE</span><span class="kicker">ИИ-тренер для фиджитал-спорта</span></div>
       <h1><span class="d">Фиджи</span><span class="p">Коуч</span></h1>
       <p class="lead">Один тренер для обеих фаз соревнования. Мини-тесты в браузере меряют навыки киберфазы, нейросеть по видео оценивает технику физической, а ИИ сводит всё в карту спортсмена и план на неделю.</p>
       <div class="cta">
         <a class="btn d big" href="#digital">Начать с цифровой фазы</a>
         <a class="btn ghost-dark big" href="#physical">Проверить технику по видео</a>
       </div>
-      <ul class="facts">
-        <li><b class="mono">6</b><span>показателей на карте</span></li>
-        <li><b class="mono">33</b><span>точки тела на кадре</span></li>
-        <li><b class="mono">3</b><span>проверки в цифровой фазе</span></li>
-      </ul>
     </div>
-    <div class="hero-art" aria-hidden="true">
-      <svg viewBox="0 0 360 360">
+    <div class="hero-side">
+      <div class="bug" role="group" aria-label="Табло: средний балл двух фаз">
+        <div class="bug-top"><span>Фиджитал-матч · ваш счёт</span><span id="bugState">Ждём первый тест</span></div>
+        <div class="bug-row"><span class="team d">Цифра</span><b class="score" id="bugD">—</b><span class="sep">:</span><b class="score" id="bugP">—</b><span class="team p">Физика</span></div>
+        <div class="bug-bar"><i class="d" id="bugBarD"></i><i class="p" id="bugBarP"></i></div>
+      </div>
+      <div class="cam" aria-hidden="true">
+        <span class="rec"><i></i>AI-камера · 33 точки тела</span>
+        <svg viewBox="0 0 360 360">
         <defs>
           <pattern id="px" width="12" height="12" patternUnits="userSpaceOnUse"><rect x="4" y="4" width="3" height="3" fill="#5B7BFF" opacity=".55"/></pattern>
           <clipPath id="lh"><rect x="0" y="0" width="180" height="360"/></clipPath>
@@ -357,8 +466,13 @@ footer .wrap{color:#93A3BD;padding-block:36px;gap:8px}
         <text x="256" y="236" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#F3F6FA">94°</text>
         <line x1="180" y1="16" x2="180" y2="344" stroke="#F3F6FA" stroke-opacity=".25" stroke-dasharray="4 6"/>
       </svg>
+      </div>
     </div>
   </div>
+  <div class="ticker" aria-hidden="true"><div class="tk-in">
+    <span><b class="d"></b>6 показателей на карте</span><span><b class="p"></b>33 точки тела на кадре</span><span><b class="d"></b>3 проверки в цифровой фазе</span><span><b class="d"></b>Реакция</span><span><b class="d"></b>Точность</span><span><b class="d"></b>Тактика</span><span><b class="p"></b>Объём</span><span><b class="p"></b>Техника</span><span><b class="p"></b>Ритм</span><span><b class="p"></b>Видео не покидает устройство</span>
+    <span><b class="d"></b>6 показателей на карте</span><span><b class="p"></b>33 точки тела на кадре</span><span><b class="d"></b>3 проверки в цифровой фазе</span><span><b class="d"></b>Реакция</span><span><b class="d"></b>Точность</span><span><b class="d"></b>Тактика</span><span><b class="p"></b>Объём</span><span><b class="p"></b>Техника</span><span><b class="p"></b>Ритм</span><span><b class="p"></b>Видео не покидает устройство</span>
+  </div></div>
 </header>
 
 <nav class="steps" aria-label="Разделы"><div class="wrap">
@@ -710,7 +824,19 @@ function renderTestResults(){
   $("#r-aim").textContent = R.aim ? `${R.aim.hits} попад. · ${R.aim.miss} пром. · ${S.scores.aim}` : "";
   $("#r-tactic").textContent = R.tactic ? `${R.tactic.correct}/${R.tactic.total} пасов · ${S.scores.tactic}` : "";
 }
-function renderAll(){ renderRadarOrdered(); renderScores(); renderPlan(); renderTestResults(); renderSquat(); renderDigital(); }
+function renderBug(){
+  const d = phaseAvg("d"), p = phaseAvg("p"), el = id=>document.getElementById(id);
+  if (!el("bugD")) return;
+  el("bugD").textContent = fmt(d); el("bugP").textContent = fmt(p);
+  let st = "Ждём первый тест";
+  if (d!=null && p!=null) st = d>p ? "Цифра впереди" : p>d ? "Физика впереди" : "Ничья";
+  else if (d!=null) st = "Идёт 1-я фаза";
+  else if (p!=null) st = "Идёт 2-я фаза";
+  el("bugState").textContent = st;
+  const a = d||0, b = p||0, sum = a+b;
+  el("bugBarD").style.width = (sum ? a/sum*100 : 50)+"%"; el("bugBarP").style.width = (sum ? b/sum*100 : 50)+"%";
+}
+function renderAll(){ renderBug(); renderRadarOrdered(); renderScores(); renderPlan(); renderTestResults(); renderSquat(); renderDigital(); }
 
 $("#resetBtn").addEventListener("click", ()=>{ S = {scores:{}, src:{}, raw:{}}; save(); renderAll(); });
 

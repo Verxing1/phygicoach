@@ -103,6 +103,14 @@ section.blk{display:flex;flex-direction:column;gap:18px;scroll-margin-top:72px}
 .hud{position:absolute;top:12px;left:14px;right:14px;display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:13px;color:var(--muted);pointer-events:none}
 #arena.go .hud{color:#E3E9FF}
 .target{position:absolute;width:52px;height:52px;border-radius:50%;border:none;padding:0;background:radial-gradient(circle,var(--surface) 0 18%,var(--digi) 19% 42%,var(--surface) 43% 60%,var(--digi) 61%);transform:translate(-50%,-50%);touch-action:manipulation}
+#arena.tac{padding:44px 14px 22px;flex-direction:column;gap:10px}
+.pitchwrap{width:100%;flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.pitch{max-width:100%;max-height:100%;width:auto;height:100%;aspect-ratio:100/64;border-radius:12px;box-shadow:0 14px 34px -18px rgba(0,0,0,.6)}
+.pitch .mate{cursor:pointer}
+.pitch .mate:hover circle,.pitch .mate:focus circle{stroke:#FFD54A}
+.tacbar{width:min(100%,560px);height:6px;border-radius:3px;background:color-mix(in srgb,var(--digi) 18%,transparent);overflow:hidden}
+.tacbar i{display:block;height:100%;width:100%;background:var(--digi);transition:width linear}
+.hud .okc{color:var(--good);font-weight:700}.hud .badc{color:var(--phys);font-weight:700}
 .missmark{position:absolute;transform:translate(-50%,-50%);color:var(--phys);font-weight:700;font-size:22px;pointer-events:none;animation:missfade .6s ease-out forwards}
 @keyframes missfade{to{opacity:0;transform:translate(-50%,-80%)}}
 .stim{width:120px;height:120px;display:flex;align-items:center;justify-content:center;font-family:var(--f-display);font-weight:700;font-size:18px;color:#fff}
@@ -369,7 +377,7 @@ footer .wrap{color:#93A3BD;padding-block:36px;gap:8px}
   <div class="tests" role="group" aria-label="Выбор теста">
     <button class="tbtn" type="button" data-test="react" aria-pressed="true">Реакция<small>5 сигналов, ~20 сек</small><span class="res" id="r-react"></span></button>
     <button class="tbtn" type="button" data-test="aim" aria-pressed="false">Точность<small>Цели за 20 сек</small><span class="res" id="r-aim"></span></button>
-    <button class="tbtn" type="button" data-test="decide" aria-pressed="false">Решения<small>Жми / стоп, 24 стимула</small><span class="res" id="r-decide"></span></button>
+    <button class="tbtn" type="button" data-test="tactic" aria-pressed="false">Тактика<small>Лучший пас, 10 ситуаций</small><span class="res" id="r-tactic"></span></button>
   </div>
   <div id="arena" tabindex="0" aria-live="polite"></div>
   <div class="panel squat digi" id="digSum" hidden>
@@ -489,7 +497,7 @@ const r0 = v => Math.round(v);
 const AX = [
   {k:"react", name:"Реакция", ph:"d"},
   {k:"aim", name:"Точность", ph:"d"},
-  {k:"decide", name:"Решения", ph:"d"},
+  {k:"tactic", name:"Тактика", ph:"d"},
   {k:"power", name:"Объём", ph:"p"},
   {k:"tech", name:"Техника", ph:"p"},
   {k:"rhythm", name:"Ритм", ph:"p"},
@@ -497,7 +505,7 @@ const AX = [
 let S = {scores:{}, src:{}, raw:{}};
 const KEY = "phygicoach.v1";
 try { const s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s && s.scores) S = s; } catch(e) {}
-function clean(){ S.scores = S.scores||{}; S.src = S.src||{}; S.raw = S.raw||{}; Object.keys(S.scores).forEach(k=>{ if(!S.src[k]) delete S.scores[k]; }); }
+function clean(){ S.scores = S.scores||{}; S.src = S.src||{}; S.raw = S.raw||{}; delete S.scores.decide; delete S.src.decide; delete S.raw.decide; Object.keys(S.scores).forEach(k=>{ if(!S.src[k]) delete S.scores[k]; }); }
 clean();
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
 
@@ -547,9 +555,9 @@ function renderRadarOrdered(){
   // place: digital on left (angles 210..330 => left side), physical on right
   const pos = {power:-60+0, tech:0, rhythm:60, decide:120+60, aim:240, react:300};
   // angles measured from top clockwise
-  const angOf = {react:-30, aim:-90, decide:-150, power:30, tech:90, rhythm:150};
+  const angOf = {react:-30, aim:-90, tactic:-150, power:30, tech:90, rhythm:150};
   const P = (k,v) => { const a=(angOf[k]-90)*Math.PI/180; return [cx+Math.cos(a)*R*v/100, cy+Math.sin(a)*R*v/100]; };
-  const order = ["power","tech","rhythm","decide","aim","react"]; // clockwise from upper-right
+  const order = ["power","tech","rhythm","tactic","aim","react"]; // clockwise from upper-right
   let h = `<path d="M${cx} ${cy-R-16} A${R+16} ${R+16} 0 0 1 ${cx} ${cy+R+16} Z" fill="var(--phys-soft)"/>`;
   h += `<path d="M${cx} ${cy-R-16} A${R+16} ${R+16} 0 0 0 ${cx} ${cy+R+16} Z" fill="var(--digi-soft)"/>`;
   [25,50,75,100].forEach(l=>{ h += `<polygon points="${order.map(k=>P(k,l).join(",")).join(" ")}" fill="none" stroke="var(--line)" stroke-width="1"/>`; });
@@ -587,7 +595,7 @@ function axDetail(k){
   if (!mine(k)) return "";
   if (k==="react" && R.react) return `медиана ${R.react.ms} мс`;
   if (k==="aim" && R.aim) return `${R.aim.hits} попаданий, точность ${R.aim.acc}%`;
-  if (k==="decide" && R.decide) return `${R.decide.acc}% верно, ${R.decide.rt} мс`;
+  if (k==="tactic" && R.tactic) return `${R.tactic.correct} из ${R.tactic.total} верных пасов, ${R.tactic.rt} мс`;
   if (!q) return "";
   if (k==="power") return q.n ? `${q.n} повт. за ${q.dur} с = ${q.rpm} в минуту` : (q.manual!=null ? `${q.manual} приседаний за 30 с` : "");
   if (k==="tech" && q.n) return `глубина ${q.minAvg}°, наклон до ${q.leanMax}°, чистых ${q.clean} из ${q.n}`;
@@ -596,7 +604,7 @@ function axDetail(k){
 }
 function renderDigital(){
   const R = S.raw, box = $("#digSum");
-  const done = ["react","aim","decide"].filter(k=>R[k] && S.src[k]);
+  const done = ["react","aim","tactic"].filter(k=>R[k] && S.src[k]);
   if (!done.length){ box.hidden = true; return; }
   box.hidden = false;
   $("#dgDone").textContent = `Пройдено тестов: ${done.length} из 3`;
@@ -615,19 +623,19 @@ function renderDigital(){
     h += `<tr><td>Промахов</td><td class="val">${a.miss}</td><td></td><td></td></tr>`;
     h += `<tr><td>Точность кликов</td><td class="val">${a.acc}%</td><td class="muted">процент попаданий от всех кликов, вес 30%</td><td class="to">${chip("aim")}</td></tr>`;
   } else h += pend("Точность");
-  if (done.includes("decide")){ const d = R.decide, sp = r0(clamp((650-d.rt)/300*100));
-    h += `<tr class="grp"><td colspan="4">Решения</td></tr>`;
-    if (d.nGo!=null){
-      h += `<tr><td>Сигналы «ЖМИ»: нажато вовремя</td><td class="val">${d.hit} из ${d.nGo}</td><td class="muted">пропусков: ${d.miss}</td><td></td></tr>`;
-      h += `<tr><td>Сигналы «СТОП»: удержался</td><td class="val">${d.cr} из ${d.nNo}</td><td class="muted">ложных нажатий: ${d.fa}</td><td></td></tr>`;
-    }
-    h += `<tr><td>Доля верных решений</td><td class="val">${d.acc}%</td><td class="muted">вес 80%</td><td></td></tr>`;
-    h += `<tr><td>Среднее время нажатия</td><td class="val">${d.rt} мс</td><td class="muted">650 мс = 0, 350 мс = 100 → ${sp} баллов, вес 20%</td><td class="to">${chip("decide")}</td></tr>`;
-  } else h += pend("Решения");
+  if (done.includes("tactic")){ const t = R.tactic, sp = r0(clamp((3000-t.rt)/2100*100));
+    h += `<tr class="grp"><td colspan="4">Тактика · лучший пас</td></tr>`;
+    h += `<tr><td>Верных пасов</td><td class="val">${t.correct} из ${t.total}</td><td class="muted">доля верных решений, вес 80%</td><td></td></tr>`;
+    h += `<tr><td>Пас в перекрытую линию</td><td class="val">${t.blocked}</td><td class="muted">соперник стоял на пути мяча</td><td></td></tr>`;
+    h += `<tr><td>Пас партнёру под опекой</td><td class="val">${t.marked}</td><td class="muted">рядом с партнёром был соперник</td><td></td></tr>`;
+    h += `<tr><td>Слишком осторожный пас</td><td class="val">${t.safe}</td><td class="muted">был открытый партнёр ближе к воротам</td><td></td></tr>`;
+    h += `<tr><td>Не успел решить</td><td class="val">${t.timeouts}</td><td class="muted">на каждую ситуацию 3 секунды</td><td></td></tr>`;
+    h += `<tr><td>Среднее время решения</td><td class="val">${t.rt} мс</td><td class="muted">3000 мс = 0, 900 мс и быстрее = 100 → ${sp} баллов, вес 20%</td><td class="to">${chip("tactic")}</td></tr>`;
+  } else h += pend("Тактика");
   $("#dgBody").innerHTML = h;
   const ws = weakest(2), inPlan = ws.filter(a=>a.ph==="d");
   $("#dgFlow").innerHTML = `
-    <div class="step"><span class="k">→ В карту</span><span>Реакция ${fmt(sc("react"))}, Точность ${fmt(sc("aim"))}, Решения ${fmt(sc("decide"))}. Цифровая фаза в среднем: <b>${fmt(phaseAvg("d"))}</b>.</span><a href="#map">Открыть карту</a></div>
+    <div class="step"><span class="k">→ В карту</span><span>Реакция ${fmt(sc("react"))}, Точность ${fmt(sc("aim"))}, Тактика ${fmt(sc("tactic"))}. Цифровая фаза в среднем: <b>${fmt(phaseAvg("d"))}</b>.</span><a href="#map">Открыть карту</a></div>
     <div class="step"><span class="k">→ В план</span><span>${inPlan.length ? `В фокус недели попали: ${inPlan.map(a=>`«${a.name}» (${S.scores[a.k]})`).join(" и ")}. Под это подобраны игровые и физические задания.` : `Цифровые показатели не самые слабые, поэтому фокус недели на физической фазе: ${ws.map(a=>`«${a.name}»`).join(" и ")}.`}</span><a href="#plan">Открыть план</a></div>`;
 }
 function renderSquat(){
@@ -671,7 +679,7 @@ function insightText(){
 const LIB = {
   react:{d:"Тренажёр реакции: 5 серий по 10 сигналов, отдых 1 мин", p:"Старты по сигналу: 8 × 10 м, старт на хлопок партнёра", m:40},
   aim:{d:"Aim-тренировка: 3 × 5 мин, сначала точность, потом скорость", p:"Удары или броски в цель: 5 × 10, считать попадания", m:45},
-  decide:{d:"Разбор двух своих матчей: стоп-кадр и выбор лучшего решения", p:"Игра 3 × 3 на малой площадке, не больше двух касаний", m:50},
+  tactic:{d:"Разбор 10 стоп-кадров из своих матчей: кому был лучший пас", p:"Игра 3 × 3 на малой площадке, не больше двух касаний", m:50},
   power:{d:"Короткая игровая сессия 20 мин после физической нагрузки", p:"Приседания 4 × 15, выпады 3 × 10 на каждую ногу", m:45},
   tech:{d:"Видео-разбор своих приседаний в ФиджиКоуче", p:"Присед у стены с паузой внизу 3 × 8, затем 2 × 10 под видео сбоку", m:35},
   rhythm:{d:"Серии игровых действий под таймер: 6 × 1 мин", p:"Приседания под метроном 60 уд/мин, 3 × 20", m:35},
@@ -700,7 +708,7 @@ function renderTestResults(){
   const R = S.raw;
   $("#r-react").textContent = R.react ? `${R.react.ms} мс · ${S.scores.react}` : "";
   $("#r-aim").textContent = R.aim ? `${R.aim.hits} попад. · ${R.aim.miss} пром. · ${S.scores.aim}` : "";
-  $("#r-decide").textContent = R.decide ? `${R.decide.acc}% верно · ${S.scores.decide}` : "";
+  $("#r-tactic").textContent = R.tactic ? `${R.tactic.correct}/${R.tactic.total} пасов · ${S.scores.tactic}` : "";
 }
 function renderAll(){ renderRadarOrdered(); renderScores(); renderPlan(); renderTestResults(); renderSquat(); renderDigital(); }
 
@@ -712,7 +720,7 @@ let current = "react", T = {}; // test runtime
 const INTRO = {
   react:["Тест реакции","Когда фон станет синим, как можно быстрее нажмите на поле. Нажатие раньше сигнала считается фальстартом."],
   aim:["Тест точности","За 20 секунд попадите в как можно большее число целей. Промахи снижают оценку."],
-  decide:["Тест решений","Синий круг «ЖМИ»: нажмите на поле. Оранжевый квадрат «СТОП»: ничего не делайте."],
+  tactic:["Лучший пас","Вы с мячом. За 3 секунды выберите партнёра для паса: открытого, ближе всех к воротам соперника. Линию паса не должен перекрывать соперник, а рядом с партнёром не должно быть опекуна. Атака идёт вправо."],
 };
 function stopAll(){ (T.timers||[]).forEach(clearTimeout); clearInterval(T.iv); T = {}; arena.className = ""; }
 function showIntro(k, extra){
@@ -720,7 +728,7 @@ function showIntro(k, extra){
   document.querySelectorAll(".tbtn").forEach(b=>b.setAttribute("aria-pressed", b.dataset.test===k ? "true":"false"));
   const [t,d] = INTRO[k];
   arena.innerHTML = `<div class="msg"><strong>${t}</strong><p>${d}</p>${extra?`<p class="mono" style="color:var(--digi)">${extra}</p>`:""}<button class="btn d" type="button" id="startT">${extra?"Пройти ещё раз":"Начать"}</button></div>`;
-  $("#startT").addEventListener("click", e=>{ e.stopPropagation(); ({react:startReact, aim:startAim, decide:startDecide})[k](); });
+  $("#startT").addEventListener("click", e=>{ e.stopPropagation(); ({react:startReact, aim:startAim, tactic:startTactic})[k](); });
 }
 document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click", ()=>showIntro(b.dataset.test)));
 function later(fn, ms){ const id = setTimeout(fn, ms); (T.timers = T.timers||[]).push(id); return id; }
@@ -760,32 +768,107 @@ function finishAim(){
   stopAll(); setScore("aim", score, {hits, miss, acc:r0(acc*100)});
   showIntro("aim", `Попаданий: ${hits}, промахов: ${miss}, точность ${r0(acc*100)}% → оценка ${S.scores.aim}`);
 }
-/* go / no-go */
-function startDecide(){
-  stopAll();
-  const seq = []; for(let i=0;i<24;i++) seq.push(i<17?"go":"no");
-  for(let i=seq.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [seq[i],seq[j]]=[seq[j],seq[i]]; }
-  T = {kind:"decide", seq, i:-1, hit:0, miss:0, fa:0, cr:0, rts:[], timers:[]};
-  nextDecide();
+/* tactic: best pass */
+const rnd = (a,b) => a + Math.random()*(b-a);
+const dist = (a,b) => Math.hypot(a.x-b.x, a.y-b.y);
+function segDist(p,a,b){ const vx=b.x-a.x, vy=b.y-a.y, L=vx*vx+vy*vy; let t=((p.x-a.x)*vx+(p.y-a.y)*vy)/L; const tt=Math.max(0,Math.min(1,t)); return {d:Math.hypot(p.x-(a.x+tt*vx), p.y-(a.y+tt*vy)), t}; }
+function evalMate(m, c, opps){
+  let lane = 99, near = 99;
+  opps.forEach(o=>{ const r=segDist(o,c,m); if (r.t>0.08 && r.t<0.95) lane = Math.min(lane, r.d); near = Math.min(near, dist(o,m)); });
+  const blocked = lane<3.2, marked = near<5;
+  // ambiguous geometry: neither clearly open nor clearly closed
+  const unclear = (lane>=3.2 && lane<7) || (near>=5 && near<8.5);
+  return {blocked, marked, open:!blocked && !marked, unclear};
 }
-function nextDecide(){
-  T.i++; T.state="blank";
-  if (T.i >= T.seq.length) return finishDecide();
-  arena.innerHTML = hud(`${T.i+1} / ${T.seq.length}`, "") ;
-  later(()=>{
-    const s = T.seq[T.i]; T.state = s; T.t0 = performance.now(); T.resp = false;
-    arena.innerHTML = hud(`${T.i+1} / ${T.seq.length}`, "") + `<div class="stim ${s==="go"?"go":"no"}">${s==="go"?"ЖМИ":"СТОП"}</div>`;
-    later(()=>{ if(!T.resp){ if(s==="go") T.miss++; else T.cr++; } nextDecide(); }, 750);
-  }, 450 + Math.random()*450);
+function genSituation(){
+  for (let n=0;n<3000;n++){
+    const c = {x:rnd(14,36), y:rnd(12,52)};
+    const all = [c], ok = p => all.every(q=>dist(p,q)>=7.5) && p.x>4 && p.x<96 && p.y>4 && p.y<60;
+    const mates = [];
+    for (let k=0;k<60 && mates.length<4;k++){ const m={x:rnd(c.x+6,92), y:rnd(6,58)}; if (ok(m)){ mates.push(m); all.push(m); } }
+    if (mates.length<4) continue;
+    const byX = [...mates].sort((a,b)=>b.x-a.x);
+    const opps = [];
+    // trap on the lane to the most advanced mate
+    { const m=byX[0], t=rnd(.4,.7), px=-(m.y-c.y), py=m.x-c.x, L=Math.hypot(px,py), off=rnd(-1.5,1.5); opps.push({x:c.x+(m.x-c.x)*t+px/L*off, y:c.y+(m.y-c.y)*t+py/L*off}); }
+    // marker next to the second most advanced
+    { const m=byX[1], a=rnd(0,Math.PI*2), r=rnd(3.2,4.6); opps.push({x:m.x+Math.cos(a)*r, y:m.y+Math.sin(a)*r}); }
+    for (let k=0;k<60 && opps.length<5;k++){ const o={x:rnd(c.x+4,96), y:rnd(5,59)}; if (all.every(q=>dist(o,q)>=7) && opps.every(q=>dist(o,q)>=6)) opps.push(o); }
+    if (opps.length<5) continue;
+    if (opps.some(o=>dist(o,c)<5 || o.x<3 || o.x>97 || o.y<3 || o.y>61)) continue;
+    const ev = mates.map(m=>evalMate(m,c,opps));
+    if (ev.some(e=>e.unclear && !e.blocked && !e.marked)) continue;
+    const open = mates.map((m,i)=>({m,i})).filter(o=>ev[o.i].open).sort((a,b)=>b.m.x-a.m.x);
+    if (!open.length) continue;
+    if (open.length>1 && open[0].m.x - open[1].m.x < 8) continue;
+    if (!mates.some((m,i)=>!ev[i].open && m.x>open[0].m.x)) continue;
+    return {c, mates, opps, ev, best:open[0].i};
+  }
+  return null;
 }
-function finishDecide(){
-  const total = T.seq.length, correct = T.hit + T.cr;
-  const rt = T.rts.length ? T.rts.reduce((a,b)=>a+b,0)/T.rts.length : 700;
-  const acc = correct/total;
-  const score = acc*80 + clamp((650-rt)/300*100)*0.2;
-  const raw = {acc:r0(acc*100), rt:r0(rt), fa:T.fa, miss:T.miss, hit:T.hit, cr:T.cr, nGo:T.seq.filter(x=>x==="go").length, nNo:T.seq.filter(x=>x==="no").length};
-  stopAll(); setScore("decide", score, raw);
-  showIntro("decide", `Верно: ${raw.acc}%, ложных нажатий: ${raw.fa}, пропусков: ${raw.miss}, среднее время ${raw.rt} мс → оценка ${S.scores.decide}`);
+function drawSituation(sit, chosen){
+  const P = sit; let h = `<svg class="pitch" viewBox="0 0 100 64" role="group" aria-label="Игровая ситуация">`;
+  h += `<rect x="0" y="0" width="100" height="64" rx="2" fill="#1E6A45"/>`;
+  for (let k=0;k<10;k++) if (k%2) h += `<rect x="${k*10}" y="0" width="10" height="64" fill="#1A603E"/>`;
+  h += `<g fill="none" stroke="rgba(255,255,255,.55)" stroke-width=".35"><rect x="1" y="1" width="98" height="62"/><line x1="50" y1="1" x2="50" y2="63"/><circle cx="50" cy="32" r="8"/><rect x="83" y="17" width="16" height="30"/><rect x="93" y="25" width="6" height="14"/></g>`;
+  h += `<rect x="99" y="27" width="1.6" height="10" fill="#F3F6FA"/>`;
+  if (chosen!=null){
+    const m = P.mates[chosen], ok = chosen===P.best;
+    h += `<line x1="${P.c.x}" y1="${P.c.y}" x2="${m.x}" y2="${m.y}" stroke="${ok?"#7CF0A8":"#FF8A6B"}" stroke-width=".7" stroke-dasharray="1.6 1.2"/>`;
+    if (!ok){ const b = P.mates[P.best]; h += `<line x1="${P.c.x}" y1="${P.c.y}" x2="${b.x}" y2="${b.y}" stroke="#7CF0A8" stroke-width=".7" stroke-dasharray="1.6 1.2" opacity=".85"/>`; }
+  }
+  P.opps.forEach(o=>{ h += `<rect x="${o.x-2.3}" y="${o.y-2.3}" width="4.6" height="4.6" transform="rotate(45 ${o.x} ${o.y})" fill="#0B1220" stroke="#F3F6FA" stroke-width=".35"/>`; });
+  P.mates.forEach((m,i)=>{
+    const ring = chosen!=null && i===P.best ? `<circle cx="${m.x}" cy="${m.y}" r="4.6" fill="none" stroke="#7CF0A8" stroke-width=".7"/>` : "";
+    const bad = chosen!=null && i===chosen && i!==P.best ? `<circle cx="${m.x}" cy="${m.y}" r="4.6" fill="none" stroke="#FF8A6B" stroke-width=".7"/>` : "";
+    h += `<g class="mate" data-i="${i}" tabindex="0" role="button" aria-label="Пас игроку ${i+2}">${ring}${bad}<circle cx="${m.x}" cy="${m.y}" r="3.2" fill="#3D63FF" stroke="#F3F6FA" stroke-width=".45"/><text x="${m.x}" y="${m.y+1.1}" text-anchor="middle" font-size="3" font-weight="700" fill="#fff" font-family="Golos Text, Arial, sans-serif">${i+2}</text></g>`;
+  });
+  h += `<circle cx="${P.c.x}" cy="${P.c.y}" r="3.2" fill="#F3F6FA" stroke="#3D63FF" stroke-width=".8"/><text x="${P.c.x}" y="${P.c.y+1.1}" text-anchor="middle" font-size="3" font-weight="700" fill="#0B1220" font-family="Golos Text, Arial, sans-serif">1</text>`;
+  h += `<circle cx="${P.c.x+3.4}" cy="${P.c.y+2.6}" r="1.3" fill="#fff" stroke="#0B1220" stroke-width=".3"/>`;
+  return h + `</svg>`;
+}
+const TAC_N = 10, TAC_MS = 3000;
+function startTactic(){ stopAll(); T = {kind:"tactic", i:-1, correct:0, blocked:0, marked:0, safe:0, timeouts:0, rts:[], timers:[]}; nextTactic(); }
+function tacHud(right){ return hud(`Ситуация ${T.i+1} / ${TAC_N} · верно ${T.correct}`, right); }
+function nextTactic(){
+  T.i++; if (T.i>=TAC_N) return finishTactic();
+  const sit = genSituation(); if (!sit){ T.i--; return later(nextTactic, 10); }
+  T.sit = sit; T.state = "ask"; T.t0 = performance.now();
+  arena.className = "tac";
+  arena.innerHTML = tacHud("3.0 с") + `<div class="pitchwrap">${drawSituation(sit)}</div><div class="tacbar"><i></i></div>`;
+  const bar = arena.querySelector(".tacbar i"); requestAnimationFrame(()=>{ bar.style.transitionDuration = TAC_MS+"ms"; bar.style.width = "0%"; });
+  clearInterval(T.iv);
+  T.iv = setInterval(()=>{ const left = Math.max(0, TAC_MS-(performance.now()-T.t0))/1000; const el = arena.querySelector(".hud span:last-child"); if (el && T.state==="ask") el.textContent = left.toFixed(1)+" с"; }, 100);
+  T.to = later(()=>{ if (T.state==="ask") answerTactic(null); }, TAC_MS);
+  arena.querySelectorAll(".mate").forEach(g=>{
+    const go = e=>{ e.preventDefault(); e.stopPropagation(); if (T.state==="ask") answerTactic(+g.dataset.i); };
+    g.addEventListener("pointerdown", go);
+    g.addEventListener("keydown", e=>{ if (e.key==="Enter"||e.key===" ") go(e); });
+  });
+}
+function answerTactic(i){
+  T.state = "fb"; clearInterval(T.iv); clearTimeout(T.to);
+  const sit = T.sit; let msg;
+  if (i===null){ T.timeouts++; msg = "Не успели: лучший пас подсвечен зелёным"; }
+  else {
+    T.rts.push(performance.now()-T.t0);
+    const ev = sit.ev[i];
+    if (i===sit.best){ T.correct++; msg = "Верно!"; }
+    else if (ev.blocked){ T.blocked++; msg = "Линию паса перекрывает соперник"; }
+    else if (ev.marked){ T.marked++; msg = "Рядом с партнёром опекун"; }
+    else { T.safe++; msg = "Был открытый партнёр ближе к воротам"; }
+  }
+  arena.innerHTML = tacHud(msg) + `<div class="pitchwrap">${drawSituation(sit, i===null ? sit.best : i)}</div><div class="tacbar"><i style="width:0%"></i></div>`;
+  const hr = arena.querySelector(".hud span:last-child"); if (hr) hr.className = i===sit.best ? "okc" : "badc";
+  later(nextTactic, i===sit.best ? 900 : 1700);
+}
+function finishTactic(){
+  const total = TAC_N, rt = T.rts.length ? T.rts.reduce((a,b)=>a+b,0)/T.rts.length : TAC_MS;
+  const acc = T.correct/total;
+  const score = acc*80 + clamp((TAC_MS-rt)/2100*100)*0.2;
+  const raw = {correct:T.correct, total, blocked:T.blocked, marked:T.marked, safe:T.safe, timeouts:T.timeouts, rt:r0(rt), acc:r0(acc*100)};
+  stopAll(); setScore("tactic", score, raw);
+  showIntro("tactic", `Верных пасов: ${raw.correct} из ${total}, среднее время ${raw.rt} мс → оценка ${S.scores.tactic}`);
 }
 arena.addEventListener("pointerdown", e=>{
   if (e.target.closest("button")) return;
@@ -809,10 +892,6 @@ arena.addEventListener("pointerdown", e=>{
   } else if (T.kind==="aim"){ T.miss++; aimHud();
     const r = arena.getBoundingClientRect(), m = document.createElement("span"); m.className = "missmark"; m.textContent = "✕";
     m.style.left = (e.clientX - r.left)+"px"; m.style.top = (e.clientY - r.top)+"px"; arena.appendChild(m); setTimeout(()=>m.remove(), 600); }
-  else if (T.kind==="decide"){
-    if (T.state==="go" && !T.resp){ T.resp=true; T.hit++; T.rts.push(performance.now()-T.t0); arena.querySelector(".stim")?.style.setProperty("opacity",".45"); }
-    else if (T.state==="no" && !T.resp){ T.resp=true; T.fa++; arena.querySelector(".stim")?.style.setProperty("opacity",".45"); }
-  }
 });
 
 /* ---------- physical: pose analysis ---------- */
@@ -1001,7 +1080,7 @@ function profileText(){
   const R = S.raw, ex = [];
   if (R.react) ex.push(`реакция ${R.react.ms} мс`);
   if (R.aim) ex.push(`точность: ${R.aim.hits} попаданий за 20 с, ${R.aim.acc}% точных`);
-  if (R.decide) ex.push(`решения: ${R.decide.acc}% верно, ${R.decide.fa} ложных нажатий, ${R.decide.rt} мс`);
+  if (R.tactic) ex.push(`тактика (лучший пас): ${R.tactic.correct} из ${R.tactic.total} верно, пасов в перекрытую линию ${R.tactic.blocked}, партнёру под опекой ${R.tactic.marked}, слишком осторожных ${R.tactic.safe}, не успел ${R.tactic.timeouts}, среднее время ${R.tactic.rt} мс`);
   if (R.squat && R.squat.n) ex.push(`приседания: ${R.squat.n} повторений, ${R.squat.rpm}/мин, средний мин. угол колена ${R.squat.minAvg}°, макс. наклон ${R.squat.leanMax}°, чистых ${R.squat.clean}`);
   const ws = weakest(2);
   return lines.join("\n") + (ex.length?"\nСырые данные: "+ex.join("; "):"") + `\nСредняя цифровая фаза ${fmt(phaseAvg("d"))}, физическая ${fmt(phaseAvg("p"))}. Фокус плана: ${ws.length ? ws.map(a=>a.name).join(", ") : "нет данных"}.`;
@@ -1018,6 +1097,7 @@ function localAnswer(q){
   }
   if (/совмещ|фаз|расписан|недел|план/.test(s))
     return `Ставьте цифровую и физическую работу в один день, как на соревновании: сначала 20–30 минут игры, потом физическая часть. Так вы учитесь играть свежим и действовать после игры. Цифровая фаза у вас ${d}, физическая ${p}, поэтому ${d<p?"на игровые задания":"на физические задания"} отводите больше времени. Воскресенье оставьте для восстановления.`;
+  if (/тактик|пас/.test(s)){ const t = S.raw.tactic; return t ? `Тактика ${S.scores.tactic}/100: верных пасов ${t.correct} из ${t.total}. Ошибки: в перекрытую линию ${t.blocked}, партнёру под опекой ${t.marked}, слишком осторожно ${t.safe}, не успел ${t.timeouts}. ${t.blocked>=t.marked?"Перед пасом смотрите на линию между вами и партнёром: стоит ли на ней соперник.":"Проверяйте, нет ли рядом с партнёром опекуна."} Разбирайте стоп-кадры своих матчей и играйте 3 × 3 в два касания.` : "Тактику я оценю после теста «Лучший пас»."; }
   if (/реакц/.test(s)) return `Реакция ${mine("react")?S.scores.react+"/100":"пока не измерена"}${S.raw.react?`, медиана ${S.raw.react.ms} мс`:""}. Тренируйте короткими сериями: 5 × 10 сигналов с отдыхом минуту, не дольше 10 минут. На физической части подойдут старты по хлопку партнёра на 10 м. Высыпайтесь: недосып заметно замедляет реакцию.`;
   if (/ритм|темп/.test(s)) return `Ритм ${mine("rhythm")?S.scores.rhythm+"/100":"пока не измерен"}: он показывает, насколько ровно по времени идут повторения. Включите метроном на 60 ударов: вниз на два удара, вверх на два. 3 × 20 приседаний через день.`;
   return `Ваши слабые места сейчас: «${w1.name}» (${S.scores[w1.k]}) и «${w2.name}» (${S.scores[w2.k]}). С них начинается план на неделю: в понедельник и четверг «${w1.name.toLowerCase()}», во вторник и пятницу «${w2.name.toLowerCase()}». В субботу проведите контрольный матч и повторите тесты, чтобы увидеть прогресс на карте.`;

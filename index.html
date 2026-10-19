@@ -6,7 +6,7 @@
 <meta name="description" content="ФиджиКоуч — ИИ-тренер для фиджитал-спортсмена">
 <title>ФиджиКоуч</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
 /* Layout: summary first (карта спортсмена), then the two phases side-coded blue/orange, then plan and coach chat. */
 :root{
@@ -310,129 +310,7 @@ footer{background:var(--night);border-top:none}
 footer .wrap{color:#93A3BD;padding-block:36px;gap:8px}
 .f-brand{font-family:var(--f-display);font-weight:700;font-size:22px;margin-bottom:6px}
 .f-brand .d{color:var(--digiN)} .f-brand .p{color:var(--physN)}
-
-/* ===== broadcast skin: match-night TV graphics ===== */
-
-html[data-skin="broadcast"]:not(#_){
-  --bg:#080C14; --surface:#101826; --ink:#EEF2F7; --muted:#93A1B5; --line:#223047;
-  --digi:#4F7BFF; --digi-soft:#152040; --phys:#FF6A1F; --phys-soft:#33190C;
-  --good:#3DD68C; --warn:#F2B544; --bad:#FF5A5F; --live:#FF3B4E;
-  --f-display:"Oswald","Golos Text",Arial,sans-serif; --r:8px;
-  --shadow:0 1px 0 rgba(255,255,255,.04) inset,0 18px 40px -24px rgba(0,0,0,.8);
-  color-scheme:dark }
-html[data-skin="broadcast"] body{background:radial-gradient(1200px 600px at 85% -10%,rgba(79,123,255,.10),transparent 60%),var(--bg);background-attachment:fixed}
-html[data-skin="broadcast"] body::before{background:#05080E}
-html[data-skin="broadcast"] h1,html[data-skin="broadcast"] h2,html[data-skin="broadcast"] h3{font-family:var(--f-display)}
-html[data-skin="broadcast"] h2{text-transform:uppercase;font-weight:700;letter-spacing:.01em;font-size:clamp(32px,4.4vw,52px);line-height:1;transform:skewX(-7deg);transform-origin:left bottom}
-html[data-skin="broadcast"] h3{font-weight:600;letter-spacing:.02em}
-html[data-skin="broadcast"] .eyebrow{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.16em}
-
-/* hero */
-html[data-skin="broadcast"] .hero.bc{background:
-  repeating-linear-gradient(115deg,transparent 0 26px,rgba(255,255,255,.018) 26px 27px),
-  radial-gradient(900px 480px at 82% 10%,rgba(79,123,255,.22),transparent 62%),
-  radial-gradient(800px 420px at 8% 110%,rgba(255,106,31,.18),transparent 60%),#05080E;
-  border-bottom:1px solid var(--line)}
-html[data-skin="broadcast"] .hero.bc .hero-in{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:44px;padding-block:52px 44px;align-items:center}
-html[data-skin="broadcast"] .livebar{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-html[data-skin="broadcast"] .live{display:inline-flex;align-items:center;gap:8px;background:var(--live);color:#fff;font:700 13px/1 var(--f-display);letter-spacing:.14em;padding:6px 14px 6px 12px;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
-html[data-skin="broadcast"] .live i{width:7px;height:7px;border-radius:50%;background:#fff;display:block}
-@media (prefers-reduced-motion:no-preference){html[data-skin="broadcast"] .live i{animation:blink 1.4s ease-in-out infinite}@keyframes blink{50%{opacity:.25}}}
-html[data-skin="broadcast"] .hero.bc .kicker{font-family:var(--f-display);font-weight:500;font-size:15px;letter-spacing:.16em;color:#D5DEEA}
-html[data-skin="broadcast"] .hero.bc h1{font-family:var(--f-display);font-weight:700;text-transform:uppercase;font-size:clamp(52px,7.4vw,116px);line-height:.88;letter-spacing:0;transform:skewX(-8deg);transform-origin:left bottom;text-shadow:none;white-space:nowrap}
-html[data-skin="broadcast"] .hero.bc h1 .d{color:#7E9BFF} html[data-skin="broadcast"] .hero.bc h1 .p{color:#FF7A33}
-html[data-skin="broadcast"] .hero.bc .lead{font-size:17.5px;color:#D3DCE8;max-width:50ch}
-html[data-skin="broadcast"] .btn{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:4px}
-html[data-skin="broadcast"] .btn.big{font-size:16px;padding:15px 30px;border-radius:0;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%)}
-html[data-skin="broadcast"] .btn.d{background:var(--digi);box-shadow:none}
-html[data-skin="broadcast"] .btn.p{background:var(--phys)}
-html[data-skin="broadcast"] .btn.ghost-dark{background:rgba(255,255,255,.09);border:none;color:#EEF2F7}
-html[data-skin="broadcast"] .btn.ghost{border-color:var(--line);color:var(--ink);background:rgba(255,255,255,.03)}
-html[data-skin="broadcast"] .hero-side{display:flex;flex-direction:column;gap:14px;min-width:0}
-html[data-skin="broadcast"] .bug{background:#0C1320;border:1px solid #273652;border-radius:6px;overflow:hidden;box-shadow:0 24px 50px -24px rgba(0,0,0,.9)}
-html[data-skin="broadcast"] .bug-top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#172238;padding:8px 14px;font:500 13px/1.3 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:#AEBBD0}
-html[data-skin="broadcast"] #bugState{color:var(--good)}
-html[data-skin="broadcast"] .bug-row{display:grid;grid-template-columns:1fr auto auto auto 1fr;align-items:center;padding:14px 0}
-html[data-skin="broadcast"] .team{font:600 clamp(15px,1.6vw,20px)/1 var(--f-display);text-transform:uppercase;letter-spacing:.08em;color:#fff;padding:12px 18px;justify-self:stretch;text-align:center}
-html[data-skin="broadcast"] .team.d{background:var(--digi);clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%)}
-html[data-skin="broadcast"] .team.p{background:var(--phys);clip-path:polygon(12px 0,100% 0,100% 100%,0 100%)}
-html[data-skin="broadcast"] .score{font:700 clamp(40px,5vw,64px)/1 var(--f-display);font-variant-numeric:tabular-nums;color:#fff;padding:0 16px;min-width:2.2ch;text-align:center}
-html[data-skin="broadcast"] .sep{font:700 34px/1 var(--f-display);color:#55647D}
-html[data-skin="broadcast"] .bug-bar{display:flex;height:6px;background:#1A2436}
-html[data-skin="broadcast"] .bug-bar i{display:block;height:100%;transition:width .6s}
-html[data-skin="broadcast"] .bug-bar i.d{background:var(--digi)} html[data-skin="broadcast"] .bug-bar i.p{background:var(--phys)}
-html[data-skin="broadcast"] .cam{position:relative;background:#0A101B;border:1px solid #1E2A40;border-radius:6px;padding:34px 18px 14px;display:flex;justify-content:center;
-  background-image:linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2),linear-gradient(#C9D3E2,#C9D3E2);
-  background-repeat:no-repeat;background-size:22px 2px,2px 22px,22px 2px,2px 22px,22px 2px,2px 22px,22px 2px,2px 22px;
-  background-position:10px 10px,10px 10px,calc(100% - 10px) 10px,calc(100% - 10px) 10px,10px calc(100% - 10px),10px calc(100% - 10px),calc(100% - 10px) calc(100% - 10px),calc(100% - 10px) calc(100% - 10px)}
-html[data-skin="broadcast"] .cam svg{width:min(100%,300px);height:auto;display:block}
-html[data-skin="broadcast"] .rec{position:absolute;top:12px;left:42px;display:flex;align-items:center;gap:7px;font:500 12px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:#C9D3E2}
-html[data-skin="broadcast"] .rec i{width:8px;height:8px;border-radius:50%;background:var(--live);display:block}
-html[data-skin="broadcast"] .ticker{border-top:1px solid var(--line);background:#0B111C;overflow:hidden;white-space:nowrap}
-html[data-skin="broadcast"] .tk-in{display:inline-flex;gap:38px;padding:12px 0;font:600 15px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:#C9D3E2}
-html[data-skin="broadcast"] .tk-in span{display:inline-flex;align-items:center;gap:12px}
-html[data-skin="broadcast"] .tk-in b{width:10px;height:10px;display:block;clip-path:polygon(30% 0,100% 0,70% 100%,0 100%)}
-html[data-skin="broadcast"] .tk-in b.d{background:var(--digi)} html[data-skin="broadcast"] .tk-in b.p{background:var(--phys)}
-@media (prefers-reduced-motion:no-preference){html[data-skin="broadcast"] .tk-in{animation:tick 48s linear infinite}@keyframes tick{to{transform:translateX(-50%)}}}
-@media (max-width:860px){html[data-skin="broadcast"] .hero.bc .hero-in{grid-template-columns:minmax(0,1fr);padding-block:30px 30px}html[data-skin="broadcast"] .cam{display:none}}
-
-/* nav as a scoreboard strip */
-html[data-skin="broadcast"] nav.steps{background:rgba(5,8,14,.92);border-bottom:1px solid var(--line)}
-html[data-skin="broadcast"] nav.steps .wrap{gap:0;padding-block:0}
-html[data-skin="broadcast"] nav.steps a{border-radius:0;padding:15px 18px;color:#AEBBD0;font-family:var(--f-display);font-weight:500;font-size:15px;letter-spacing:.08em;text-transform:uppercase;border:none;border-bottom:3px solid transparent;border-right:1px solid var(--line)}
-html[data-skin="broadcast"] nav.steps a:first-child{border-left:1px solid var(--line)}
-html[data-skin="broadcast"] nav.steps a b{font-family:var(--f-display);color:#5F6E86;font-size:14px}
-html[data-skin="broadcast"] nav.steps a:hover{background:rgba(255,255,255,.04);color:#fff}
-html[data-skin="broadcast"] nav.steps a.on,html[data-skin="broadcast"] nav.steps a.d.on,html[data-skin="broadcast"] nav.steps a.p.on{background:rgba(255,255,255,.05);color:#fff;border-bottom-color:var(--ink)}
-html[data-skin="broadcast"] nav.steps a.d.on{border-bottom-color:var(--digi)} html[data-skin="broadcast"] nav.steps a.p.on{border-bottom-color:var(--phys)}
-
-/* section heads as lower-thirds */
-html[data-skin="broadcast"] .sechead{grid-template-columns:auto minmax(0,1fr);gap:18px}
-html[data-skin="broadcast"] .stnum{-webkit-text-stroke:0;color:#fff;font:700 30px/1 var(--f-display);letter-spacing:.02em;padding:10px 18px 10px 14px;background:var(--ink);color:var(--bg);clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%);margin-top:4px}
-html[data-skin="broadcast"] .stnum.d{background:var(--digi);color:#fff} html[data-skin="broadcast"] .stnum.p{background:var(--phys);color:#fff} html[data-skin="broadcast"] .stnum.n{background:#E7ECF3;color:#0A0F17}
-@media (max-width:520px){html[data-skin="broadcast"] .sechead{grid-template-columns:minmax(0,1fr);gap:10px}html[data-skin="broadcast"] .stnum{font-size:24px;justify-self:start}}
-
-/* surfaces */
-html[data-skin="broadcast"] .panel,html[data-skin="broadcast"] .banner,html[data-skin="broadcast"] .tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
-html[data-skin="broadcast"] .panel{box-shadow:var(--shadow)}
-html[data-skin="broadcast"] .tablewrap.flat{background:transparent;border:none}
-html[data-skin="broadcast"] th{font-family:var(--f-display);font-weight:500;font-size:13px;letter-spacing:.12em;color:#8E9CB2;background:rgba(255,255,255,.02)}
-html[data-skin="broadcast"] tr.grp td{font-family:var(--f-display);font-weight:600;letter-spacing:.1em;background:rgba(255,255,255,.035)}
-html[data-skin="broadcast"] .chip{border-radius:3px;font-family:var(--f-display);font-weight:500;letter-spacing:.06em;text-transform:uppercase;font-size:12.5px}
-html[data-skin="broadcast"] .tbtn{border-radius:var(--r);font-family:var(--f-display);font-weight:600;font-size:19px;letter-spacing:.06em;text-transform:uppercase;background:var(--surface);border-color:var(--line)}
-html[data-skin="broadcast"] .tbtn small{text-transform:none;letter-spacing:0}
-html[data-skin="broadcast"] .tbtn .res{text-transform:none}
-html[data-skin="broadcast"] .tbtn[aria-pressed="true"]{background:var(--digi);border-color:var(--digi)}
-html[data-skin="broadcast"] #arena{border-radius:10px;border-color:#24345A}
-html[data-skin="broadcast"] #arena .msg strong{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.03em;font-size:34px}
-html[data-skin="broadcast"] #arena.go .msg strong{font-size:72px}
-html[data-skin="broadcast"] .stage{border-radius:10px}
-html[data-skin="broadcast"] .kpi{border-radius:6px}
-html[data-skin="broadcast"] .kpi .num,html[data-skin="broadcast"] .ps .big{font-family:var(--f-display);font-weight:700}
-html[data-skin="broadcast"] .kpi .lab,html[data-skin="broadcast"] .ps .lab{font-family:var(--f-display);font-weight:500;letter-spacing:.1em;text-transform:uppercase;font-size:13px}
-html[data-skin="broadcast"] .ps{border-radius:6px}
-html[data-skin="broadcast"] .ps .big{font-size:60px;line-height:1}
-html[data-skin="broadcast"] .ax .v .mono{font-family:var(--f-display);font-weight:600;font-size:17px}
-html[data-skin="broadcast"] .bar{background:#1A2436}
-html[data-skin="broadcast"] .radarbox{background:radial-gradient(circle at 50% 50%,#121C2C 50%,var(--surface))}
-html[data-skin="broadcast"] td.day{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
-html[data-skin="broadcast"] .msgc.bot{background:#152034;border:1px solid var(--line);box-shadow:none}
-html[data-skin="broadcast"] .msgc .who{font-family:var(--f-display);letter-spacing:.12em}
-html[data-skin="broadcast"] form.ask input{background:#0C1320;border-color:var(--line)}
-html[data-skin="broadcast"] .quick button{background:transparent;border-color:var(--line);color:#C9D3E2}
-html[data-skin="broadcast"] footer{background:#05080E;border-top:1px solid var(--line)}
-html[data-skin="broadcast"] .f-brand{font-family:var(--f-display);text-transform:uppercase;letter-spacing:.04em;font-size:24px}
-
-
-html[data-skin="broadcast"] .hero:not(.bc){display:none}
-html:not([data-skin="broadcast"]) .hero.bc{display:none}
-nav.steps .wrap{align-items:center}
-.skin-tg{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:transparent;color:var(--muted);font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px;white-space:nowrap}
-.skin-tg b{color:var(--ink);font-weight:700}
-.skin-tg:hover{color:var(--ink);border-color:var(--ink)}
-html[data-skin="broadcast"] .skin-tg{border-radius:3px;font-family:var(--f-display);font-weight:500;letter-spacing:.08em;text-transform:uppercase;background:rgba(255,255,255,.04);margin-block:8px}
 </style>
-<script>try{document.documentElement.dataset.skin=localStorage.getItem("phygicoach.skin")||"broadcast"}catch(e){document.documentElement.dataset.skin="broadcast"}</script>
 </head>
 <body>
 
@@ -483,62 +361,12 @@ html[data-skin="broadcast"] .skin-tg{border-radius:3px;font-family:var(--f-displ
   </div>
 </header>
 
-<header class="hero bc">
-  <div class="wrap hero-in">
-    <div class="hero-txt">
-      <div class="livebar"><span class="live"><i></i>LIVE</span><span class="kicker">ИИ-тренер для фиджитал-спорта</span></div>
-      <h1><span class="d">Фиджи</span><span class="p">Коуч</span></h1>
-      <p class="lead">Один тренер для обеих фаз соревнования. Мини-тесты в браузере меряют навыки киберфазы, нейросеть по видео оценивает технику физической, а ИИ сводит всё в карту спортсмена и план на неделю.</p>
-      <div class="cta">
-        <a class="btn d big" href="#digital">Начать с цифровой фазы</a>
-        <a class="btn ghost-dark big" href="#physical">Проверить технику по видео</a>
-      </div>
-    </div>
-    <div class="hero-side">
-      <div class="bug" role="group" aria-label="Табло: средний балл двух фаз">
-        <div class="bug-top"><span>Фиджитал-матч · ваш счёт</span><span id="bugState">Ждём первый тест</span></div>
-        <div class="bug-row"><span class="team d">Цифра</span><b class="score" id="bugD">—</b><span class="sep">:</span><b class="score" id="bugP">—</b><span class="team p">Физика</span></div>
-        <div class="bug-bar"><i class="d" id="bugBarD"></i><i class="p" id="bugBarP"></i></div>
-      </div>
-      <div class="cam" aria-hidden="true">
-        <span class="rec"><i></i>AI-камера · 33 точки тела</span>
-        <svg viewBox="0 0 360 360">
-        <defs>
-          <pattern id="px" width="12" height="12" patternUnits="userSpaceOnUse"><rect x="4" y="4" width="3" height="3" fill="#5B7BFF" opacity=".55"/></pattern>
-          <clipPath id="lh"><rect x="0" y="0" width="180" height="360"/></clipPath>
-          <clipPath id="rh"><rect x="180" y="0" width="180" height="360"/></clipPath>
-        </defs>
-        <circle cx="180" cy="180" r="170" fill="#121B2E" stroke="#22304A"/>
-        <g clip-path="url(#lh)"><circle cx="180" cy="180" r="170" fill="url(#px)"/></g>
-        <g clip-path="url(#rh)" fill="none" stroke="#FF7A33" stroke-opacity=".35" stroke-width="2">
-          <path d="M180 40 C260 60 320 120 330 200"/><path d="M180 70 C245 88 296 136 304 204"/><path d="M180 100 C230 116 272 152 278 208"/>
-        </g>
-        <g stroke="#5B7BFF" stroke-width="2" fill="none" opacity=".9"><circle cx="112" cy="118" r="26"/><circle cx="112" cy="118" r="12"/><path d="M112 82v18M112 136v18M76 118h18M130 118h18"/></g>
-        <g fill="none" stroke="#FF7A33" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M214 142 L188 212"/><path d="M188 212 L244 210 L236 274 L258 278"/><path d="M212 150 L268 166"/>
-        </g>
-        <circle cx="222" cy="116" r="15" fill="none" stroke="#FF7A33" stroke-width="7"/>
-        <path d="M222 211 A 22 22 0 0 0 240 232" fill="none" stroke="#F3F6FA" stroke-width="2.5"/>
-        <g fill="#8EA6FF" stroke="#0B1220" stroke-width="3"><circle cx="214" cy="142" r="7"/><circle cx="188" cy="212" r="7"/><circle cx="244" cy="210" r="7"/><circle cx="236" cy="274" r="7"/></g>
-        <text x="256" y="236" font-family="JetBrains Mono, monospace" font-size="15" font-weight="700" fill="#F3F6FA">94°</text>
-        <line x1="180" y1="16" x2="180" y2="344" stroke="#F3F6FA" stroke-opacity=".25" stroke-dasharray="4 6"/>
-      </svg>
-      </div>
-    </div>
-  </div>
-  <div class="ticker" aria-hidden="true"><div class="tk-in">
-    <span><b class="d"></b>6 показателей на карте</span><span><b class="p"></b>33 точки тела на кадре</span><span><b class="d"></b>3 проверки в цифровой фазе</span><span><b class="d"></b>Реакция</span><span><b class="d"></b>Точность</span><span><b class="d"></b>Тактика</span><span><b class="p"></b>Объём</span><span><b class="p"></b>Техника</span><span><b class="p"></b>Ритм</span><span><b class="p"></b>Видео не покидает устройство</span>
-    <span><b class="d"></b>6 показателей на карте</span><span><b class="p"></b>33 точки тела на кадре</span><span><b class="d"></b>3 проверки в цифровой фазе</span><span><b class="d"></b>Реакция</span><span><b class="d"></b>Точность</span><span><b class="d"></b>Тактика</span><span><b class="p"></b>Объём</span><span><b class="p"></b>Техника</span><span><b class="p"></b>Ритм</span><span><b class="p"></b>Видео не покидает устройство</span>
-  </div></div>
-</header>
-
 <nav class="steps" aria-label="Разделы"><div class="wrap">
   <a href="#digital" class="d"><b>01</b>Цифровая фаза</a>
   <a href="#physical" class="p"><b>02</b>Физическая фаза</a>
   <a href="#map"><b>03</b>Карта спортсмена</a>
   <a href="#plan"><b>04</b>План</a>
   <a href="#coach"><b>05</b>ИИ-тренер</a>
-  <button class="skin-tg" type="button" id="skinBtn" aria-label="Переключить дизайн"></button>
 </div></nav>
 
 <main><div class="wrap">
@@ -882,19 +710,7 @@ function renderTestResults(){
   $("#r-aim").textContent = R.aim ? `${R.aim.hits} попад. · ${R.aim.miss} пром. · ${S.scores.aim}` : "";
   $("#r-tactic").textContent = R.tactic ? `${R.tactic.correct}/${R.tactic.total} пасов · ${S.scores.tactic}` : "";
 }
-function renderBug(){
-  const d = phaseAvg("d"), p = phaseAvg("p"), el = id=>document.getElementById(id);
-  if (!el("bugD")) return;
-  el("bugD").textContent = fmt(d); el("bugP").textContent = fmt(p);
-  let st = "Ждём первый тест";
-  if (d!=null && p!=null) st = d>p ? "Цифра впереди" : p>d ? "Физика впереди" : "Ничья";
-  else if (d!=null) st = "Идёт 1-я фаза";
-  else if (p!=null) st = "Идёт 2-я фаза";
-  el("bugState").textContent = st;
-  const a = d||0, b = p||0, sum = a+b;
-  el("bugBarD").style.width = (sum ? a/sum*100 : 50)+"%"; el("bugBarP").style.width = (sum ? b/sum*100 : 50)+"%";
-}
-function renderAll(){ renderBug(); renderRadarOrdered(); renderScores(); renderPlan(); renderTestResults(); renderSquat(); renderDigital(); }
+function renderAll(){ renderRadarOrdered(); renderScores(); renderPlan(); renderTestResults(); renderSquat(); renderDigital(); }
 
 $("#resetBtn").addEventListener("click", ()=>{ S = {scores:{}, src:{}, raw:{}}; save(); renderAll(); });
 
@@ -1314,15 +1130,11 @@ bubble("bot","ФиджиКоуч","Привет! Я ваш тренер по ф�
   const io = new IntersectionObserver(es=>{ es.forEach(e=>{ if (e.isIntersecting){ links.forEach(l=>l.classList.remove("on")); map.get(e.target.id)?.classList.add("on"); } }); }, {rootMargin:"-45% 0px -50% 0px"});
   map.forEach((_,id)=>{ const el = document.getElementById(id); if (el) io.observe(el); });
 })();
-/* keep each hero title inside its column whatever font width the browser ends up with */
-function fitTitles(){ document.querySelectorAll(".hero h1").forEach(h=>{ if (!h.offsetParent) return; h.style.fontSize = ""; let fs = parseFloat(getComputedStyle(h).fontSize), n = 0;
-  while (h.scrollWidth > h.clientWidth + 1 && fs > 28 && n++ < 40){ fs -= 2; h.style.fontSize = fs + "px"; } }); }
-fitTitles(); addEventListener("resize", fitTitles); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitles);
-/* design switch: broadcast <-> classic */
-(function(){ const btn = document.getElementById("skinBtn"), root = document.documentElement;
-  const label = ()=>{ btn.innerHTML = root.dataset.skin==="broadcast" ? "Дизайн: <b>Трансляция</b>" : "Дизайн: <b>Классика</b>"; btn.title = "Переключить на " + (root.dataset.skin==="broadcast" ? "классический" : "трансляцию"); };
-  label();
-  btn.addEventListener("click", ()=>{ root.dataset.skin = root.dataset.skin==="broadcast" ? "classic" : "broadcast"; try{ localStorage.setItem("phygicoach.skin", root.dataset.skin); }catch(e){} label(); fitTitles(); renderRadarOrdered(); });
+/* keep the hero title inside its column whatever font width the browser ends up with */
+(function(){ const h = document.querySelector(".hero h1"); if (!h) return;
+  function fit(){ h.style.fontSize = ""; let fs = parseFloat(getComputedStyle(h).fontSize), n = 0;
+    while (h.scrollWidth > h.clientWidth + 1 && fs > 28 && n++ < 40){ fs -= 2; h.style.fontSize = fs + "px"; } }
+  fit(); addEventListener("resize", fit); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
 })();
 /* ---------- boot ---------- */
 renderAll(); showIntro("react");

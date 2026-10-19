@@ -212,7 +212,7 @@ body::before{background:var(--night)}
 .hero .brand{gap:12px}
 .hero .logo{width:34px;height:34px}
 .kicker{font-size:14px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#E6ECF5}
-.hero h1{font-size:clamp(44px,7vw,96px);line-height:1;letter-spacing:-.03em;font-weight:700;white-space:nowrap}
+.hero h1{font-size:clamp(40px,4.8vw,70px);line-height:1;letter-spacing:-.03em;font-weight:700;white-space:nowrap}
 .hero h1{text-shadow:0 2px 24px rgba(11,18,32,.9)}
 .hero h1 .d{color:#8BA2FF} .hero h1 .p{color:#FF8A47}
 .hero .lead{color:#DCE4EF;font-size:18px;max-width:52ch;line-height:1.55}
@@ -316,7 +316,7 @@ footer .wrap{color:#93A3BD;padding-block:36px;gap:8px}
 
 
 <header class="hero">
-  <div class="hero-bg" aria-hidden="true"><div class="hb-d"></div><div class="hb-p"></div><div class="seam"></div></div>
+  <div class="hero-bg" aria-hidden="true"><div class="hb-d"></div><div class="hb-p"></div></div>
   <div class="wrap hero-in">
     <div class="hero-txt">
       <div class="brand">
@@ -1129,6 +1129,12 @@ bubble("bot","ФиджиКоуч","Привет! Я ваш тренер по ф�
   if (!("IntersectionObserver" in window)) return;
   const io = new IntersectionObserver(es=>{ es.forEach(e=>{ if (e.isIntersecting){ links.forEach(l=>l.classList.remove("on")); map.get(e.target.id)?.classList.add("on"); } }); }, {rootMargin:"-45% 0px -50% 0px"});
   map.forEach((_,id)=>{ const el = document.getElementById(id); if (el) io.observe(el); });
+})();
+/* keep the hero title inside its column whatever font width the browser ends up with */
+(function(){ const h = document.querySelector(".hero h1"); if (!h) return;
+  function fit(){ h.style.fontSize = ""; let fs = parseFloat(getComputedStyle(h).fontSize), n = 0;
+    while (h.scrollWidth > h.clientWidth + 1 && fs > 28 && n++ < 40){ fs -= 2; h.style.fontSize = fs + "px"; } }
+  fit(); addEventListener("resize", fit); if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
 })();
 /* ---------- boot ---------- */
 renderAll(); showIntro("react");

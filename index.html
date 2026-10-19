@@ -310,35 +310,9 @@ footer{background:var(--night);border-top:none}
 footer .wrap{color:#93A3BD;padding-block:36px;gap:8px}
 .f-brand{font-family:var(--f-display);font-weight:700;font-size:22px;margin-bottom:6px}
 .f-brand .d{color:var(--digiN)} .f-brand .p{color:var(--physN)}
-
-/* ===== sport layer: the page sits on a pitch, the cursor is a ball ===== */
-.pitchbg{position:fixed;inset:0;z-index:0;pointer-events:none;color:var(--ink);opacity:.07;
-  background:repeating-linear-gradient(90deg,transparent 0 120px,color-mix(in srgb,var(--ink) 16%,transparent) 120px 240px)}
-.pitchbg svg{position:absolute;inset:0;width:100%;height:100%}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pitchbg{opacity:.09;color:#CFE0FF}}
-:root[data-theme="dark"] .pitchbg{opacity:.09;color:#CFE0FF}
-main,footer,nav.steps{position:relative;z-index:1}
-nav.steps{z-index:5}
-.ball{position:fixed;left:0;top:0;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;z-index:9999;transform:translate3d(-100px,-100px,0);will-change:transform;transition:opacity .2s}
-.ball svg{width:100%;height:100%;display:block;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35));transition:transform .2s}
-.ball.hot svg{transform:scale(1.35)}
-.ball.off{opacity:0}
-.ballshadow{position:fixed;left:0;top:0;width:22px;height:6px;margin:12px 0 0 -11px;border-radius:50%;background:rgba(0,0,0,.18);filter:blur(2px);pointer-events:none;z-index:9998;transform:translate3d(-100px,-100px,0);transition:opacity .2s}
-.ballshadow.off{opacity:0}
-.kick{position:fixed;pointer-events:none;z-index:9997;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;border:2px solid var(--phys);animation:kick .5s ease-out forwards}
-@keyframes kick{to{transform:scale(5);opacity:0}}
-@media (pointer:coarse),(prefers-reduced-motion:reduce){.ball,.ballshadow{display:none}}
 </style>
 </head>
 <body>
-<div class="pitchbg" aria-hidden="true"><svg viewBox="0 0 1000 640" preserveAspectRatio="xMidYMid slice"><g fill="none" stroke="currentColor" stroke-width="3">
-<rect x="30" y="30" width="940" height="580"/><line x1="500" y1="30" x2="500" y2="610"/><circle cx="500" cy="320" r="92"/><circle cx="500" cy="320" r="5" fill="currentColor"/>
-<rect x="30" y="160" width="150" height="320"/><rect x="30" y="245" width="55" height="150"/><circle cx="130" cy="320" r="4" fill="currentColor"/><path d="M180 262 A 92 92 0 0 1 180 378"/>
-<rect x="820" y="160" width="150" height="320"/><rect x="915" y="245" width="55" height="150"/><circle cx="870" cy="320" r="4" fill="currentColor"/><path d="M820 262 A 92 92 0 0 0 820 378"/>
-<path d="M30 48 A 18 18 0 0 0 48 30"/><path d="M952 30 A 18 18 0 0 0 970 48"/><path d="M48 610 A 18 18 0 0 0 30 592"/><path d="M970 592 A 18 18 0 0 0 952 610"/>
-</g></svg></div>
-<div class="ballshadow" aria-hidden="true"></div>
-<div class="ball" aria-hidden="true"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="14.5" fill="#F7F9FC" stroke="#0B1220" stroke-width="1.5"/><path d="M16 10.2l5.3 3.9-2 6.2h-6.6l-2-6.2z" fill="#0B1220"/><path d="M16 1.6v8.6M21.3 14.1l8.4-2.6M19.3 20.3l5 7M12.7 20.3l-5 7M10.7 14.1L2.3 11.5" stroke="#0B1220" stroke-width="1.3" fill="none"/><path d="M11 2.6l5 1.6 5-1.6M28.4 8.2l1.2 5.3-2.6 4.6M26 24.4l-4.6 3.6-5.4.2M6 24.4l4.6 3.6M3.6 8.2L2.4 13.5l2.6 4.6" stroke="#0B1220" stroke-width="1.1" fill="none" opacity=".55"/></svg></div>
 
 
 <header class="hero">
@@ -1156,39 +1130,6 @@ bubble("bot","ФиджиКоуч","Привет! Я ваш тренер по ф�
   const io = new IntersectionObserver(es=>{ es.forEach(e=>{ if (e.isIntersecting){ links.forEach(l=>l.classList.remove("on")); map.get(e.target.id)?.classList.add("on"); } }); }, {rootMargin:"-45% 0px -50% 0px"});
   map.forEach((_,id)=>{ const el = document.getElementById(id); if (el) io.observe(el); });
 })();
-
-/* ===== ball cursor: rolls after the pointer, grows over controls, kicks on click ===== */
-(function(){
-  if (matchMedia("(pointer: coarse)").matches || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  const ball = document.querySelector(".ball"), sh = document.querySelector(".ballshadow"), svg = ball && ball.querySelector("svg");
-  if (!ball) return;
-  let x=-100, y=-100, bx=-100, by=-100, rot=0, seen=false;
-  const HOT = "a,button,label,input,summary,.tbtn,[role=button]";
-  addEventListener("pointermove", e=>{
-    if (e.pointerType!=="mouse") return;
-    x=e.clientX+16; y=e.clientY+18; if (!seen){ bx=x; by=y; seen=true; }
-    const t = e.target instanceof Element ? e.target : document.body;
-    ball.classList.toggle("hot", !!t.closest(HOT));
-    const quiet = !!t.closest("#arena,.stage");
-    ball.classList.toggle("off", quiet); sh.classList.toggle("off", quiet);
-  }, {passive:true});
-  addEventListener("pointerdown", e=>{
-    if (e.pointerType!=="mouse" || (e.target instanceof Element && e.target.closest("#arena,.stage"))) return;
-    const k=document.createElement("span"); k.className="kick"; k.style.left=e.clientX+"px"; k.style.top=e.clientY+"px"; document.body.appendChild(k); setTimeout(()=>k.remove(),550);
-    rot += 140;
-  });
-  document.addEventListener("pointerleave", ()=>{ ball.classList.add("off"); sh.classList.add("off"); });
-  document.addEventListener("pointerenter", ()=>{ ball.classList.remove("off"); sh.classList.remove("off"); });
-  (function loop(){
-    const dx = (x-bx)*.2, dy = (y-by)*.2; bx += dx; by += dy;
-    rot += dx*4.2; // roll: angle follows horizontal travel (circumference ~ 82px)
-    ball.style.transform = `translate3d(${bx}px,${by}px,0)`;
-    svg.style.rotate = rot+"deg";
-    sh.style.transform = `translate3d(${bx}px,${by}px,0)`;
-    requestAnimationFrame(loop);
-  })();
-})();
-
 /* ---------- boot ---------- */
 renderAll(); showIntro("react");
 setMode();
